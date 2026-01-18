@@ -1,0 +1,109 @@
+.notification-bell-container {
+  position: relative;
+  display: inline-block;
+}
+
+.notification-bell {
+  width: fit-content;
+  height: fit-content;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.notification-bell:hover {
+  background-color: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.2);
+  transform: scale(1.05);
+}
+
+.notification-bell:hover .bell-icon {
+  color: #fbbf24;
+}
+
+.notification-bell .bell-icon {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+  transition: all 0.2s ease;
+  z-index: 1;
+  filter: brightness(0.9);
+}
+
+.notification-bell:hover .bell-icon {
+  filter: brightness(1.1);
+}
+
+.notification-bell.has-notifications .bell-icon {
+  filter: brightness(1.2) drop-shadow(0 0 4px rgba(251, 191, 36, 0.5));
+}
+
+.notification-dot {
+  position: absolute;
+  bottom: 8px;
+  left: 8px;
+  width: 12px;
+  height: 12px;
+  z-index: 2;
+}
+
+.notification-dot::before {
+  content: "";
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  background-color: #22c55e;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 0 8px rgba(34, 197, 94, 0.6);
+}
+
+.dot-pulse {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  background-color: rgba(34, 197, 94, 0.4);
+  border-radius: 50%;
+  animation: pulse-dot 2s ease-out infinite;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+
+@keyframes pulse-dot {
+  0% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(2);
+    opacity: 0.6;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(3);
+    opacity: 0;
+  }
+}
+
+.notification-bell.has-notifications {
+  animation: bell-shake 0.5s ease-in-out;
+}
+
+@keyframes bell-shake {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-10deg);
+  }
+  75% {
+    transform: rotate(10deg);
+  }
+}

@@ -1,0 +1,176 @@
+/* Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+
+body {
+  margin: 0;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  overflow: hidden;
+  /* Prevent scrollbars */
+}
+
+/* Container Layout */
+.login-container {
+  display: flex;
+  width: 100vw;
+  height: 100vh;
+}
+
+/* --- Left Section (Visual) --- */
+.login-visual {
+  flex: 6;
+  /* 60% width */
+  position: relative;
+  background-image: url('../assets/login-bg.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.visual-overlay {
+  position: absolute;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.1);
+  /* Subtle dark tip */
+}
+
+/* --- Right Section (Content) --- */
+.login-content {
+  flex: 4;
+  /* 40% width */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  /* CRITICAL: Background changed to white as requested, creating contrast with dark card */
+  background-color: #ffffff;
+  position: relative;
+}
+
+/* --- New Dark 3D Card Styles (User Provided) --- */
+
+.form {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  /* No transform styles needed since we removed the flip */
+}
+
+.form_front {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+  /* Simplified from absolute/backface to standard block */
+  padding: 65px 45px;
+  border-radius: 15px;
+  /* Dark Neumorphic Shadow */
+  box-shadow: inset 2px 2px 10px rgba(0, 0, 0, 1),
+    inset -1px -1px 5px rgba(255, 255, 255, 0.6);
+}
+
+.form_details {
+  font-size: 25px;
+  font-weight: 600;
+  padding-bottom: 10px;
+  color: black;
+}
+
+.input {
+  width: 245px;
+  min-height: 45px;
+  color: #fff;
+  outline: none;
+  transition: 0.35s;
+  padding: 0px 15px;
+  /* Increased padding slightly for text */
+  background-color: #212121;
+  border-radius: 6px;
+  border: 2px solid #212121;
+  /* Outer Neumorphic Shadow */
+  box-shadow: 6px 6px 10px rgba(0, 0, 0, 1),
+    1px 1px 10px rgba(255, 255, 255, 0.6);
+}
+
+.input::placeholder {
+  color: #999;
+}
+
+.input:focus::placeholder {
+  transition: 0.3s;
+  opacity: 0;
+}
+
+.input:focus {
+  transform: scale(1.05);
+  box-shadow: 6px 6px 10px rgba(0, 0, 0, 1),
+    1px 1px 10px rgba(255, 255, 255, 0.6),
+    inset -1px -1px 5px rgba(255, 255, 255, 0.6);
+}
+
+/* Make native password reveal icon white */
+.input::-ms-reveal,
+.input::-ms-clear {
+  filter: invert(1);
+  cursor: pointer;
+}
+
+.btn {
+  padding: 10px 35px;
+  cursor: pointer;
+  background-color: #212121;
+  border-radius: 6px;
+  border: 2px solid #212121;
+  box-shadow: 6px 6px 10px rgba(0, 0, 0, 1),
+    1px 1px 10px rgba(255, 255, 255, 0.6);
+  color: #fff;
+  font-size: 15px;
+  font-weight: bold;
+  transition: 0.35s;
+  margin-top: 10px;
+}
+
+.btn:hover {
+  transform: scale(1.05);
+  box-shadow: 6px 6px 10px rgba(0, 0, 0, 1),
+    1px 1px 10px rgba(255, 255, 255, 0.6),
+    inset 2px 2px 10px rgba(0, 0, 0, 1),
+    inset -1px -1px 5px rgba(255, 255, 255, 0.6);
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* --- Error Message Adaptation --- */
+.error-message {
+  padding: 10px;
+  background-color: rgba(239, 68, 68, 0.2);
+  /* Red with transparency */
+  border: 1px solid #ef4444;
+  color: #ffcccc;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+/* --- Footer --- */
+.login-footer {
+  margin-top: 3rem;
+  font-size: 0.75rem;
+  color: #888;
+  text-align: center;
+}
+
+/* --- Responsive --- */
+@media (max-width: 900px) {
+  .login-visual {
+    display: none;
+  }
+
+  .login-content {
+    flex: 1;
+  }
+}

@@ -1,0 +1,196 @@
+/* Layout Styles - Enterprise Neutral */
+.layout {
+  display: flex;
+  min-height: 100vh;
+  height: 100%;
+  background-color: var(--color-background-alt);
+  overflow-x: hidden;
+}
+
+/* Sidebar Styles - Professional Enterprise Palette */
+.sidebar {
+  width: 260px;
+  background: #2d3748;
+  color: #f7fafc;
+  display: flex;
+  flex-direction: column;
+  box-shadow: var(--shadow-md);
+  position: fixed;
+  height: 100vh;
+  overflow-y: auto;
+  z-index: 100;
+}
+
+.sidebar-header {
+  padding: var(--spacing-xl);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.sidebar-title {
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  margin-bottom: var(--spacing-lg);
+  color: #ffffff;
+  letter-spacing: 0.3px;
+}
+
+.user-info {
+  padding-top: var(--spacing-lg);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.user-name {
+  font-size: var(--font-size-base);
+  font-weight: 500;
+  margin-bottom: var(--spacing-xs);
+  color: #ffffff;
+}
+
+.user-role {
+  font-size: var(--font-size-sm);
+  color: #a0aec0;
+  text-transform: capitalize;
+}
+
+/* Sidebar Navigation */
+.sidebar-nav {
+  flex: 1;
+  padding: var(--spacing-md) 0;
+  overflow-y: auto;
+}
+
+.nav-item {
+  display: block;
+  padding: var(--spacing-md) var(--spacing-xl);
+  color: #e2e8f0;
+  text-decoration: none;
+  transition: all var(--transition-base);
+  border-left: 3px solid transparent;
+  font-size: var(--font-size-base);
+  font-weight: 400;
+  white-space: nowrap;
+}
+
+.nav-item:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+  border-left-color: #718096;
+}
+
+.nav-item.active {
+  background-color: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  border-left-color: #4299e1;
+  font-weight: 500;
+}
+
+/* Sidebar Footer */
+.sidebar-footer {
+  margin-top: auto;
+  padding-top: var(--spacing-lg);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.sidebar-footer-item {
+  margin: 0 var(--spacing-xl);
+  margin-bottom: var(--spacing-sm);
+}
+
+/* Logout Button - Icon Style */
+.logout-btn {
+  margin: var(--spacing-md) var(--spacing-xl) var(--spacing-xl);
+  padding: var(--spacing-md);
+  background-color: var(--color-danger);
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition-base);
+  width: calc(100% - calc(var(--spacing-xl) * 2));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+}
+
+.logout-btn:hover {
+  background-color: var(--color-danger-hover);
+  transform: scale(1.02);
+}
+
+.logout-btn:active {
+  transform: scale(0.98);
+}
+
+.logout-icon {
+  width: 24px;
+  height: 24px;
+  stroke-width: 2;
+}
+
+/* Main Content Area */
+.main-content {
+  flex: 1;
+  margin-left: 260px;
+  padding: var(--spacing-2xl);
+  min-height: 100vh;
+  background-color: var(--color-background-alt);
+  max-width: calc(100vw - 260px);
+  width: 100%;
+  position: relative;
+  overflow-x: hidden;
+  overflow-y: visible;
+  box-sizing: border-box;
+}
+
+/* Responsive Design */
+@media (max-width: 1440px) {
+  .main-content {
+    max-width: calc(100vw - 260px);
+  }
+}
+
+@media (max-width: 1024px) {
+  .sidebar {
+    width: 240px;
+  }
+
+  .main-content {
+    margin-left: 240px;
+    max-width: calc(100vw - 240px);
+    padding: var(--spacing-xl);
+  }
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    width: 200px;
+  }
+
+  .main-content {
+    margin-left: 200px;
+    max-width: calc(100vw - 200px);
+    padding: var(--spacing-lg);
+  }
+
+  .sidebar-title {
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .sidebar {
+    width: 180px;
+  }
+
+  .main-content {
+    margin-left: 180px;
+    max-width: calc(100vw - 180px);
+    padding: 15px;
+  }
+
+  .nav-item {
+    padding: 10px 15px;
+    font-size: 14px;
+  }
+}

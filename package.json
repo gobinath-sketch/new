@@ -1,0 +1,16 @@
+{
+  "name": "single-playground-erp",
+  "version": "1.0.0",
+  "description": "Enterprise ERP System",
+  "scripts": {
+    "dev": "node scripts/start.js",
+    "install-all": "npm install && cd backend && npm install && cd ../frontend && npm install"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.40.0",
+    "@percy/cli": "^1.31.0",
+    "@percy/playwright": "^1.0.0",
+    "concurrently": "^8.2.2",
+    "kill-port": "^2.0.1"
+  }
+}
