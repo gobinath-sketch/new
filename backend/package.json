@@ -3,14 +3,14 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "node --watch server.js",
-    "start": "node server.js",
-    "seed": "node scripts/seedUsers.js",
-    "seed-test-data": "node scripts/seedTestData.js",
-    "test-e2e": "node scripts/endToEndTest.js",
-    "test-comprehensive": "node scripts/comprehensiveTest.js",
-    "update-passwords": "node scripts/updatePasswords.js",
-    "verify": "node scripts/systemVerification.js"
+    "dev": "node --watch src/index.js",
+    "start": "node src/index.js",
+    "seed": "node src/scripts/seedUsers.js",
+    "seed-test-data": "node src/scripts/seedTestData.js",
+    "test-e2e": "node src/scripts/endToEndTest.js",
+    "test-comprehensive": "node src/scripts/comprehensiveTest.js",
+    "update-passwords": "node src/scripts/updatePasswords.js",
+    "verify": "node src/scripts/systemVerification.js"
   },
   "dependencies": {
     "axios": "^1.13.2",
