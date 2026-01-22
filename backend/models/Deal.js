@@ -44,6 +44,18 @@ const dealSchema = new mongoose.Schema({
     type: Number,
     default: 0
   },
+  travelCost: {
+    type: Number,
+    default: 0
+  },
+  marketingCost: {
+    type: Number,
+    default: 0
+  },
+  otherCost: {
+    type: Number,
+    default: 0
+  },
   grossMarginPercent: {
     type: Number,
     default: 0
@@ -108,47 +120,44 @@ const dealSchema = new mongoose.Schema({
   }
 });
 
-dealSchema.pre('save', async function(next) {
+dealSchema.pre('save', async function (next) {
   try {
-    const totalCost = this.trainerCost + this.labCost + this.logisticsCost + this.contentCost + this.contingencyBuffer;
-    
-    // Use AI for margin calculation
-    const { calculateMarginWithAI } = await import('../utils/aiDecisionEngine.js');
-    const marginResult = await calculateMarginWithAI(this.totalOrderValue, {
-      totalCost,
-      trainerCost: this.trainerCost,
-      labCost: this.labCost,
-      logisticsCost: this.logisticsCost,
-      contentCost: this.contentCost,
-      contingencyBuffer: this.contingencyBuffer
-    });
-    
-    this.grossMarginPercent = marginResult.grossMarginPercent;
-    this.contributionMargin = marginResult.netProfit;
+    // 1. Calculate Total Cost (Deterministic Math)
+    const totalCost = (this.trainerCost || 0) +
+      (this.labCost || 0) +
+      (this.logisticsCost || 0) +
+      (this.contentCost || 0) +
+      (this.contingencyBuffer || 0) +
+      (this.travelCost || 0) +
+      (this.marketingCost || 0) +
+      (this.otherCost || 0);
+
+    // 2. Calculate Gross Profit (Contribution Margin)
+    this.contributionMargin = this.totalOrderValue - totalCost;
     this.breakEvenValue = totalCost;
-    this.marginThresholdStatus = marginResult.marginStatus;
-    
+
+    // 3. Calculate GP %
+    this.grossMarginPercent = this.totalOrderValue > 0
+      ? (this.contributionMargin / this.totalOrderValue) * 100
+      : 0;
+
+    // 4. Determine Status (Rule-based)
+    if (this.grossMarginPercent < 15) {
+      this.marginThresholdStatus = 'Below Threshold';
+    } else if (this.grossMarginPercent >= 15 && this.grossMarginPercent <= 25) {
+      this.marginThresholdStatus = 'At Threshold'; // Adjusted standard ranges
+    } else {
+      this.marginThresholdStatus = 'Above Threshold';
+    }
+
+    // OPTIONAL: Still use AI for qualitative risk, but NOT for math.
+    // For now, removing AI from this hook entirely to speed up saving and avoid 401 errors.
+
     this.updatedAt = Date.now();
     next();
   } catch (error) {
-    // Fallback to simple calculation if AI fails
-    const totalCost = this.trainerCost + this.labCost + this.logisticsCost + this.contentCost + this.contingencyBuffer;
-    this.grossMarginPercent = this.totalOrderValue > 0 
-      ? ((this.totalOrderValue - totalCost) / this.totalOrderValue) * 100 
-      : 0;
-    this.contributionMargin = this.totalOrderValue - totalCost;
-    this.breakEvenValue = totalCost;
-    
-    if (this.grossMarginPercent < 10) {
-      this.marginThresholdStatus = 'Below Threshold';
-    } else if (this.grossMarginPercent > 15) {
-      this.marginThresholdStatus = 'Above Threshold';
-    } else {
-      this.marginThresholdStatus = 'At Threshold';
-    }
-    
-    this.updatedAt = Date.now();
-    next();
+    console.error('Error in Deal pre-save calculation:', error);
+    next(error);
   }
 });
 

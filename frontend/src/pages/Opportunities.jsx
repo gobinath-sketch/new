@@ -61,7 +61,7 @@ const Opportunities = ({ user }) => {
         designation: '',
         location: '',
         opportunityType: 'Training',
-        serviceCategory: 'Corporate',
+        serviceCategory: 'Enterprise',
         expectedParticipants: '',
         expectedDuration: '',
         expectedStartDate: '',
@@ -115,7 +115,7 @@ const Opportunities = ({ user }) => {
       const response = await api.get(`/opportunities/${id}/download`, {
         responseType: 'blob'
       });
-      
+
       // Check if response is actually a PDF blob
       if (response.data && response.data instanceof Blob) {
         const url = window.URL.createObjectURL(response.data);
@@ -149,7 +149,7 @@ const Opportunities = ({ user }) => {
   return (
     <div>
       <div className="page-header">
-        <h1 className="page-title">Sales Opportunities</h1>
+        <h1 className="page-title">Opportunities</h1>
         {user.role === 'Business Head' && user.subRole === 'SalesExecutive' && (
           <button onClick={() => setShowForm(!showForm)} className="btn-primary">
             {showForm ? 'Cancel' : 'Create Opportunity'}
@@ -163,64 +163,64 @@ const Opportunities = ({ user }) => {
           <div className="form-grid">
             <div className="form-group">
               <label>Client Company Name</label>
-              <input 
-                type="text" 
-                value={formData.clientCompanyName} 
-                onChange={(e) => setFormData({ ...formData, clientCompanyName: e.target.value })} 
-                required 
+              <input
+                type="text"
+                value={formData.clientCompanyName}
+                onChange={(e) => setFormData({ ...formData, clientCompanyName: e.target.value })}
+                required
               />
             </div>
             <div className="form-group">
               <label>Client Contact Name</label>
-              <input 
-                type="text" 
-                value={formData.clientContactName} 
-                onChange={(e) => setFormData({ ...formData, clientContactName: e.target.value })} 
-                required 
+              <input
+                type="text"
+                value={formData.clientContactName}
+                onChange={(e) => setFormData({ ...formData, clientContactName: e.target.value })}
+                required
               />
             </div>
             <div className="form-group">
               <label>Client Email</label>
-              <input 
-                type="email" 
-                value={formData.clientEmail} 
-                onChange={(e) => setFormData({ ...formData, clientEmail: e.target.value })} 
+              <input
+                type="email"
+                value={formData.clientEmail}
+                onChange={(e) => setFormData({ ...formData, clientEmail: e.target.value })}
                 placeholder="example@gmail.com or corporate@company.com"
-                required 
+                required
               />
             </div>
             <div className="form-group">
               <label>Client Phone</label>
-              <input 
-                type="text" 
-                value={formData.clientPhone} 
-                onChange={(e) => setFormData({ ...formData, clientPhone: e.target.value })} 
+              <input
+                type="text"
+                value={formData.clientPhone}
+                onChange={(e) => setFormData({ ...formData, clientPhone: e.target.value })}
                 placeholder="Enter phone number (10+ digits accepted)"
-                required 
+                required
               />
             </div>
             <div className="form-group">
               <label>Designation</label>
-              <input 
-                type="text" 
-                value={formData.designation} 
-                onChange={(e) => setFormData({ ...formData, designation: e.target.value })} 
-                required 
+              <input
+                type="text"
+                value={formData.designation}
+                onChange={(e) => setFormData({ ...formData, designation: e.target.value })}
+                required
               />
             </div>
             <div className="form-group">
               <label>Location</label>
-              <input 
-                type="text" 
-                value={formData.location} 
-                onChange={(e) => setFormData({ ...formData, location: e.target.value })} 
-                required 
+              <input
+                type="text"
+                value={formData.location}
+                onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                required
               />
             </div>
             <div className="form-group">
               <label>Opportunity Type</label>
-              <select 
-                value={formData.opportunityType} 
+              <select
+                value={formData.opportunityType}
                 onChange={(e) => setFormData({ ...formData, opportunityType: e.target.value })}
                 required
               >
@@ -232,8 +232,8 @@ const Opportunities = ({ user }) => {
             </div>
             <div className="form-group">
               <label>Service Category</label>
-              <select 
-                value={formData.serviceCategory} 
+              <select
+                value={formData.serviceCategory}
                 onChange={(e) => setFormData({ ...formData, serviceCategory: e.target.value })}
                 required
               >
@@ -245,45 +245,45 @@ const Opportunities = ({ user }) => {
             </div>
             <div className="form-group">
               <label>Expected Participants</label>
-              <input 
-                type="number" 
-                value={formData.expectedParticipants} 
-                onChange={(e) => setFormData({ ...formData, expectedParticipants: e.target.value })} 
-                required 
+              <input
+                type="number"
+                value={formData.expectedParticipants}
+                onChange={(e) => setFormData({ ...formData, expectedParticipants: e.target.value })}
+                required
               />
             </div>
             <div className="form-group">
               <label>Expected Duration (Days)</label>
-              <input 
-                type="number" 
-                value={formData.expectedDuration} 
-                onChange={(e) => setFormData({ ...formData, expectedDuration: e.target.value })} 
-                required 
+              <input
+                type="number"
+                value={formData.expectedDuration}
+                onChange={(e) => setFormData({ ...formData, expectedDuration: e.target.value })}
+                required
               />
             </div>
             <div className="form-group">
               <label>Expected Start Date</label>
-              <input 
-                type="date" 
-                value={formData.expectedStartDate} 
-                onChange={(e) => setFormData({ ...formData, expectedStartDate: e.target.value })} 
-                required 
+              <input
+                type="date"
+                value={formData.expectedStartDate}
+                onChange={(e) => setFormData({ ...formData, expectedStartDate: e.target.value })}
+                required
               />
             </div>
             <div className="form-group">
               <label>Expected Commercial Value (₹)</label>
-              <input 
-                type="number" 
-                value={formData.expectedCommercialValue} 
-                onChange={(e) => setFormData({ ...formData, expectedCommercialValue: e.target.value })} 
-                required 
+              <input
+                type="number"
+                value={formData.expectedCommercialValue}
+                onChange={(e) => setFormData({ ...formData, expectedCommercialValue: e.target.value })}
+                required
               />
             </div>
             <div className="form-group" style={{ gridColumn: '1 / -1' }}>
               <label>Notes (Optional)</label>
-              <textarea 
-                value={formData.notes} 
-                onChange={(e) => setFormData({ ...formData, notes: e.target.value })} 
+              <textarea
+                value={formData.notes}
+                onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                 rows="3"
               />
             </div>
@@ -318,7 +318,7 @@ const Opportunities = ({ user }) => {
                 <td><span className={`status-badge ${opp.opportunityStatus.toLowerCase().replace(/\s+/g, '-')}`}>{opp.opportunityStatus}</span></td>
                 <td>
                   <div className="action-buttons">
-                    <button 
+                    <button
                       onClick={() => window.location.href = `/opportunities/${opp._id}`}
                       className="btn-small btn-primary"
                     >

@@ -86,7 +86,7 @@ router.get('/', authenticate, async (req, res) => {
     const isSalesRole = userRole === 'Business Head' || userRole === 'Director';
     if (isSalesRole) {
       options.opportunityType = ['Training', 'Exam Voucher', 'Content Development / Project Work', 'Consultant (Resource Support)', 'Lab Support', 'Product'];
-      options.serviceCategory = ['Corporate', 'Academic', 'School', 'Government', 'Individual'];
+      options.serviceCategory = ['Enterprise', 'Academic', 'School', 'Government', 'Individual'];
       options.opportunityStatus = ['New', 'Qualified', 'Sent to Delivery', 'Converted to Deal', 'Lost'];
     }
 

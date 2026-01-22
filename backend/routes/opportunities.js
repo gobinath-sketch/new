@@ -54,22 +54,24 @@ router.get('/:id', authenticate, authorize('Sales Executive', 'Sales Manager', '
 router.post('/', authenticate, authorize('Sales Executive', 'Sales Manager'), async (req, res) => {
   try {
     const opportunityId = await generateOpportunityId(Opportunity);
-    
+
     // Set the correct field based on user role
     const opportunityData = {
       ...req.body,
       opportunityId,
+      // Ensure Adhoc ID matches the system format if not manually overriding (or just force it)
+      adhocId: req.body.adhocId || opportunityId,
       createdBy: req.user._id,
       opportunityStatus: 'New'
     };
-    
+
     // Sales Executive sets salesExecutiveId, Sales Manager sets salesManagerId
     if (req.user.role === 'Sales Executive') {
       opportunityData.salesExecutiveId = req.user._id;
     } else if (req.user.role === 'Sales Manager') {
       opportunityData.salesManagerId = req.user._id;
     }
-    
+
     const opportunity = new Opportunity(opportunityData);
     await opportunity.save();
 
@@ -98,8 +100,8 @@ router.post('/', authenticate, authorize('Sales Executive', 'Sales Manager'), as
   }
 });
 
-// Update opportunity (Sales Executive for their own, Sales Manager for all)
-router.put('/:id', authenticate, authorize('Sales Executive', 'Sales Manager'), async (req, res) => {
+// Update opportunity (Sales Executive, Sales Manager, Business Head, Director)
+router.put('/:id', authenticate, authorize('Sales Executive', 'Sales Manager', 'Business Head', 'Director'), async (req, res) => {
   try {
     const opportunity = await Opportunity.findById(req.params.id);
     if (!opportunity) {
@@ -109,7 +111,7 @@ router.put('/:id', authenticate, authorize('Sales Executive', 'Sales Manager'), 
     // Sales Executive can only update their own opportunities
     if (req.user.role === 'Sales Executive') {
       const isOwner = (opportunity.salesExecutiveId && opportunity.salesExecutiveId.toString() === req.user._id.toString()) ||
-                      (opportunity.createdBy && opportunity.createdBy.toString() === req.user._id.toString());
+        (opportunity.createdBy && opportunity.createdBy.toString() === req.user._id.toString());
       if (!isOwner) {
         return res.status(403).json({ error: 'Access denied' });
       }
@@ -142,6 +144,21 @@ router.put('/:id', authenticate, authorize('Sales Executive', 'Sales Manager'), 
     if (req.body.opportunityStatus === 'Lost' && opportunity.opportunityStatus !== 'Lost') {
       req.body.lostAt = new Date();
     }
+    // Business Head / Director Approval Logic
+    if (req.body.opportunityStatus === 'Approved' && opportunity.opportunityStatus !== 'Approved') {
+      if (req.user.role !== 'Business Head' && req.user.role !== 'Director') {
+        return res.status(403).json({ error: 'Only Business Head or Director can approve opportunities' });
+      }
+      req.body.approvedAt = new Date();
+      req.body.approvedBy = req.user._id;
+    }
+    if (req.body.opportunityStatus === 'Rejected' && opportunity.opportunityStatus !== 'Rejected') {
+      if (req.user.role !== 'Business Head' && req.user.role !== 'Director') {
+        return res.status(403).json({ error: 'Only Business Head or Director can reject opportunities' });
+      }
+      req.body.rejectedAt = new Date();
+      req.body.rejectedBy = req.user._id;
+    }
 
     const updatedOpportunity = await Opportunity.findByIdAndUpdate(
       req.params.id,
@@ -162,13 +179,13 @@ router.put('/:id', authenticate, authorize('Sales Executive', 'Sales Manager'), 
     if (oldStatus !== req.body.opportunityStatus && req.body.opportunityStatus) {
       const { createNotification } = await import('../utils/notificationService.js');
       let notificationType = null;
-      
+
       if (req.body.opportunityStatus === 'Qualified') {
         notificationType = 'opportunity_qualified';
       } else if (req.body.opportunityStatus === 'Converted to Deal') {
         notificationType = 'opportunity_converted';
       }
-      
+
       if (notificationType) {
         await createNotification(
           notificationType,
@@ -305,14 +322,14 @@ router.get('/:id/download', authenticate, authorize('Sales Executive', 'Sales Ma
 
     const SystemEventLog = (await import('../models/SystemEventLog.js')).default;
     try {
-    await SystemEventLog.create({
-      eventType: 'Document Downloaded',
-      entityType: 'Opportunity',
-      entityId: opportunity._id.toString(),
-      userId: req.user._id,
-      userRole: req.user.role,
-      action: 'Downloaded opportunity summary PDF'
-    });
+      await SystemEventLog.create({
+        eventType: 'Document Downloaded',
+        entityType: 'Opportunity',
+        entityId: opportunity._id.toString(),
+        userId: req.user._id,
+        userRole: req.user.role,
+        action: 'Downloaded opportunity summary PDF'
+      });
     } catch (logError) {
       // Don't fail PDF generation if logging fails
       console.error('Failed to log download event:', logError.message);

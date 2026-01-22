@@ -4,12 +4,16 @@ const payableSchema = new mongoose.Schema({
   purchaseOrderId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'PurchaseOrder',
-    required: true
+    required: false
   },
   vendorId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Vendor',
-    required: true
+    required: false
+  },
+  adhocId: {
+    type: String,
+    required: false
   },
   vendorName: {
     type: String,
@@ -22,11 +26,23 @@ const payableSchema = new mongoose.Schema({
   },
   approvedCost: {
     type: Number,
-    required: true
+    required: false
   },
   adjustedPayableAmount: {
     type: Number,
     required: true
+  },
+  taxableAmount: {
+    type: Number,
+    default: 0
+  },
+  gstAmount: {
+    type: Number,
+    default: 0
+  },
+  tdsAmount: {
+    type: Number,
+    default: 0
   },
   paymentTerms: {
     type: Number,
@@ -83,9 +99,9 @@ const payableSchema = new mongoose.Schema({
   }
 });
 
-payableSchema.pre('save', function(next) {
+payableSchema.pre('save', function (next) {
   this.outstandingAmount = this.adjustedPayableAmount - this.paidAmount;
-  
+
   if (this.holdFlag) {
     this.status = 'On Hold';
   } else if (this.releaseFlag && this.outstandingAmount === 0) {
@@ -93,7 +109,7 @@ payableSchema.pre('save', function(next) {
   } else if (this.releaseFlag) {
     this.status = 'Released';
   }
-  
+
   this.updatedAt = Date.now();
   next();
 });

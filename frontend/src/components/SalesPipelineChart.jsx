@@ -1,59 +1,58 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
-  LineChart,
-  Line,
+  AreaChart,
+  Area,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
-  ResponsiveContainer,
-  Dot
+  ResponsiveContainer
 } from 'recharts';
 import './SalesPipelineChart.css';
 
 const SalesPipelineChart = ({ pipelineData }) => {
-  const [isMinimized, setIsMinimized] = useState(false);
-  
+
+
   // Calculate pipeline stages and percentages
   const total = pipelineData.total || 0;
   const qualified = pipelineData.qualified || 0;
   const sentToDelivery = pipelineData.sentToDelivery || 0;
   const converted = pipelineData.converted || 0;
-  
+
   // Calculate percentages relative to total
   const calculatePercentage = (value, base) => {
     if (base === 0) return 0;
     return parseFloat(((value / base) * 100).toFixed(0));
   };
-  
+
   // Prepare data for recharts
   const chartData = [
-    { 
-      stage: 'All', 
-      percentage: 100, 
+    {
+      stage: 'All',
+      percentage: 100,
       value: total,
       label: 'ALL OPPORTUNITIES'
     },
-    { 
-      stage: 'Qualified', 
-      percentage: calculatePercentage(qualified, total), 
+    {
+      stage: 'Qualified',
+      percentage: calculatePercentage(qualified, total),
       value: qualified,
       label: 'QUALIFIED'
     },
-    { 
-      stage: 'Sent to Delivery', 
-      percentage: calculatePercentage(sentToDelivery, total), 
+    {
+      stage: 'Sent to Delivery',
+      percentage: calculatePercentage(sentToDelivery, total),
       value: sentToDelivery,
       label: 'SENT TO DELIVERY'
     },
-    { 
-      stage: 'Converted', 
-      percentage: calculatePercentage(converted, total), 
+    {
+      stage: 'Converted',
+      percentage: calculatePercentage(converted, total),
       value: converted,
       label: 'CONVERTED'
     }
   ];
-  
+
   // Custom dot component for data points
   const CustomDot = (props) => {
     const { cx, cy, payload } = props;
@@ -96,7 +95,7 @@ const SalesPipelineChart = ({ pipelineData }) => {
       </g>
     );
   };
-  
+
   // Custom label for X-axis
   const CustomLabel = ({ x, y, payload }) => {
     if (!payload) return null;
@@ -115,7 +114,7 @@ const SalesPipelineChart = ({ pipelineData }) => {
       </text>
     );
   };
-  
+
   // Custom Y-axis tick
   const CustomYAxisTick = ({ x, y, payload }) => {
     return (
@@ -132,137 +131,127 @@ const SalesPipelineChart = ({ pipelineData }) => {
       </text>
     );
   };
-  
+
   return (
     <div className="sales-pipeline-chart-container">
       <div className="chart-header">
         <div className="chart-title-bar">CLOSURES CONVERSION FUNNEL</div>
         <div className="chart-subtitle">Real-Time Performance Metrics & Conversion Rates</div>
-        <button 
-          className="chart-toggle-btn"
-          onClick={() => setIsMinimized(!isMinimized)}
-          title={isMinimized ? "Maximize Chart" : "Minimize Chart"}
-          aria-label={isMinimized ? "Maximize Chart" : "Minimize Chart"}
-        >
-          {isMinimized ? (
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
-            </svg>
-          ) : (
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3" />
-            </svg>
-          )}
-        </button>
       </div>
-      
-      {!isMinimized && (
-        <div className="chart-wrapper">
-          <ResponsiveContainer width="100%" height={450}>
-            <LineChart
-              data={chartData}
-              margin={{
-                top: 40,
-                right: 40,
-                bottom: 60,
-                left: 40
+
+      <div className="chart-wrapper">
+        <ResponsiveContainer width="100%" height={450}>
+          <AreaChart
+            data={chartData}
+            margin={{
+              top: 40,
+              right: 40,
+              bottom: 60,
+              left: 40
+            }}
+            className="pipeline-line-chart"
+          >
+            <defs>
+              <linearGradient id="colorPnL" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
+                <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+              </linearGradient>
+              <linearGradient id="strokeGradient" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0%" stopColor="#34d399" stopOpacity={1} />
+                <stop offset="100%" stopColor="#10b981" stopOpacity={1} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid
+              strokeDasharray="3 3"
+              stroke="rgba(255, 255, 255, 0.05)"
+              horizontal={true}
+              vertical={false}
+              className="chart-grid"
+            />
+            <XAxis
+              dataKey="label"
+              axisLine={false}
+              tickLine={false}
+              stroke="rgba(255, 255, 255, 0.6)"
+              tick={<CustomLabel />}
+              height={80}
+              interval={0}
+            />
+            <YAxis
+              domain={[0, 100]}
+              ticks={[0, 20, 40, 60, 80, 100]}
+              axisLine={false}
+              tickLine={false}
+              stroke="rgba(255, 255, 255, 0.6)"
+              tick={<CustomYAxisTick />}
+              width={60}
+            />
+            <Tooltip
+              contentStyle={{
+                backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                border: '1px solid rgba(16, 185, 129, 0.3)',
+                borderRadius: '8px',
+                color: '#ffffff',
+                padding: '12px 16px',
+                boxShadow: '0 4px 20px rgba(0, 0, 0, 0.5)'
               }}
-              className="pipeline-line-chart"
-            >
-              <defs>
-                <linearGradient id="lineGradient" x1="0" y1="0" x2="1" y2="0">
-                  <stop offset="0%" stopColor="#ffffff" stopOpacity={0.8} />
-                  <stop offset="100%" stopColor="#ffffff" stopOpacity={1} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid 
-                strokeDasharray="0" 
-                stroke="rgba(255, 255, 255, 0.15)"
-                horizontal={true}
-                vertical={false}
-                className="chart-grid"
-              />
-              <XAxis 
-                dataKey="label"
-                axisLine={true}
-                tickLine={false}
-                stroke="rgba(255, 255, 255, 0.6)"
-                tick={<CustomLabel />}
-                height={80}
-                interval={0}
-              />
-              <YAxis 
-                domain={[0, 100]}
-                ticks={[0, 20, 40, 60, 80, 100]}
-                axisLine={true}
-                tickLine={false}
-                stroke="rgba(255, 255, 255, 0.6)"
-                tick={<CustomYAxisTick />}
-                width={60}
-              />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: 'rgba(15, 23, 42, 0.95)',
-                  border: '1px solid rgba(255, 255, 255, 0.3)',
-                  borderRadius: '8px',
-                  color: '#ffffff',
-                  padding: '12px 16px',
-                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.4)'
-                }}
-                labelStyle={{
-                  color: '#ffffff',
-                  fontWeight: 600,
-                  marginBottom: '8px',
-                  textTransform: 'uppercase',
-                  fontSize: '12px'
-                }}
-                itemStyle={{
-                  color: '#ffffff',
-                  fontSize: '14px',
-                  fontWeight: 500
-                }}
-                formatter={(value, name) => {
-                  if (name === 'percentage') {
-                    return [`${value}%`, 'Conversion Rate'];
-                  }
-                  return [value, 'Count'];
-                }}
-              />
-              <Line
-                type="monotone"
-                dataKey="percentage"
-                stroke="url(#lineGradient)"
-                strokeWidth={3}
-                dot={<CustomDot />}
-                activeDot={{ r: 8, fill: '#ffffff' }}
-                className="pipeline-line"
-              />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-      )}
-      
+              labelStyle={{
+                color: '#34d399',
+                fontWeight: 600,
+                marginBottom: '8px',
+                textTransform: 'uppercase',
+                fontSize: '12px',
+                letterSpacing: '1px'
+              }}
+              itemStyle={{
+                color: '#ffffff',
+                fontSize: '14px',
+                fontWeight: 500
+              }}
+              match={false}
+              cursor={{ stroke: 'rgba(52, 211, 153, 0.3)', strokeWidth: 1, strokeDasharray: '5 5' }}
+              formatter={(value, name) => {
+                if (name === 'percentage') {
+                  return [`${value}%`, 'Conversion Rate'];
+                }
+                return [value, 'Count'];
+              }}
+            />
+            <Area
+              type="monotone"
+              dataKey="percentage"
+              stroke="url(#strokeGradient)"
+              strokeWidth={3}
+              fill="url(#colorPnL)"
+              fillOpacity={1}
+              dot={<CustomDot />}
+              activeDot={{ r: 8, fill: '#10b981', stroke: '#fff', strokeWidth: 2 }}
+              className="pipeline-line"
+              isAnimationActive={false}
+            />
+          </AreaChart>
+        </ResponsiveContainer>
+      </div>
+
       {/* Legend/Stats below chart */}
-      {!isMinimized && (
-        <div className="chart-legend">
-          <div className="legend-item">
-            <span className="legend-label">Total Opportunities:</span>
-            <span className="legend-value">{total}</span>
-          </div>
-          <div className="legend-item">
-            <span className="legend-label">Qualified:</span>
-            <span className="legend-value">{qualified} ({calculatePercentage(qualified, total)}%)</span>
-          </div>
-          <div className="legend-item">
-            <span className="legend-label">Sent to Delivery:</span>
-            <span className="legend-value">{sentToDelivery} ({calculatePercentage(sentToDelivery, total)}%)</span>
-          </div>
-          <div className="legend-item">
-            <span className="legend-label">Converted/Closures:</span>
-            <span className="legend-value highlight">{converted} ({calculatePercentage(converted, total)}%)</span>
-          </div>
+      <div className="chart-legend">
+        <div className="legend-item">
+          <span className="legend-label">Total Opportunities:</span>
+          <span className="legend-value">{total}</span>
         </div>
-      )}
+        <div className="legend-item">
+          <span className="legend-label">Qualified:</span>
+          <span className="legend-value">{qualified} ({calculatePercentage(qualified, total)}%)</span>
+        </div>
+        <div className="legend-item">
+          <span className="legend-label">Sent to Delivery:</span>
+          <span className="legend-value">{sentToDelivery} ({calculatePercentage(sentToDelivery, total)}%)</span>
+        </div>
+        <div className="legend-item">
+          <span className="legend-label">Converted/Closures:</span>
+          <span className="legend-value highlight">{converted} ({calculatePercentage(converted, total)}%)</span>
+        </div>
+      </div>
     </div>
   );
 };

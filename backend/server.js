@@ -53,7 +53,7 @@ import purchaseOfferRoutes from './routes/purchaseOffers.js';
 import bocRoutes from './routes/bocs.js';
 import opportunityRoutes from './routes/opportunities.js';
 import clientRoutes from './routes/clients.js';
-import revenueTargetRoutes from './routes/revenueTargets.js';
+import revenueTargetRoutes from './routes/revenueTargets.js'; // Imported
 import notificationsRoutes from './routes/notifications.js';
 
 // Health check

@@ -8,7 +8,7 @@ import Governance from '../models/Governance.js';
 
 const router = express.Router();
 
-router.get('/', authenticate, authorize('Finance Manager', 'Director'), async (req, res) => {
+router.get('/', authenticate, authorize('Finance Manager', 'Director', 'Sales Executive', 'Sales Manager', 'Business Head'), async (req, res) => {
   try {
     const invoices = await Invoice.find().populate('programId dealId').sort({ createdAt: -1 });
     res.json(invoices);
@@ -52,7 +52,7 @@ router.get('/:id/download', authenticate, authorize('Finance Manager', 'Director
   }
 });
 
-router.get('/:id', authenticate, authorize('Finance Manager', 'Director'), async (req, res) => {
+router.get('/:id', authenticate, authorize('Finance Manager', 'Director', 'Sales Executive', 'Sales Manager', 'Business Head'), async (req, res) => {
   try {
     const invoice = await Invoice.findById(req.params.id).populate('programId dealId');
     if (!invoice) {
@@ -70,15 +70,15 @@ router.post('/', authenticate, authorize('Finance Manager'), async (req, res) =>
     if (!program) {
       return res.status(404).json({ error: 'Program not found' });
     }
-    
+
     if (!program.clientSignOff) {
       return res.status(400).json({ error: 'Client sign-off required before invoice generation' });
     }
-    
+
     const invoiceNumber = await generateInvoiceNumber(Invoice);
     const irnNumber = await generateIRN(Invoice);
     const ewayBillNumber = await generateEwayBill(Invoice);
-    
+
     const invoice = new Invoice({
       ...req.body,
       clientInvoiceNumber: invoiceNumber,
@@ -87,7 +87,7 @@ router.post('/', authenticate, authorize('Finance Manager'), async (req, res) =>
       invoiceDate: req.body.invoiceDate || new Date()
     });
     await invoice.save();
-    
+
     try {
       const existingInvoices = await Invoice.find({ clientName: invoice.clientName, invoiceAmount: invoice.invoiceAmount });
       if (existingInvoices.length > 1) {
@@ -95,7 +95,7 @@ router.post('/', authenticate, authorize('Finance Manager'), async (req, res) =>
         governance.fraudAlertType = 'Duplicate Invoice';
         governance.duplicateDetectionLog = { invoiceId: invoice._id, similarInvoices: existingInvoices.map(i => i._id) };
         await governance.save();
-        
+
         invoice.duplicateFlag = true;
         await invoice.save();
       }
@@ -103,7 +103,7 @@ router.post('/', authenticate, authorize('Finance Manager'), async (req, res) =>
       // Don't fail invoice creation if duplicate detection fails
       console.error('Error in duplicate detection:', dupError.message);
     }
-    
+
     try {
       await AuditTrail.create({
         action: 'Invoice Created',
@@ -117,7 +117,7 @@ router.post('/', authenticate, authorize('Finance Manager'), async (req, res) =>
       // Don't fail invoice creation if audit trail fails
       console.error('Error creating audit trail:', auditError.message);
     }
-    
+
     // Auto-post ledger entry (create receivable)
     // Reload invoice first to ensure all calculated fields (totalAmount) are present
     const freshInvoice = await Invoice.findById(invoice._id);
@@ -129,7 +129,7 @@ router.post('/', authenticate, authorize('Finance Manager'), async (req, res) =>
       console.error('Error auto-creating receivable:', error.message);
       // Still continue with invoice creation
     }
-    
+
     try {
       const SystemEventLog = (await import('../models/SystemEventLog.js')).default;
       await SystemEventLog.create({
@@ -145,7 +145,7 @@ router.post('/', authenticate, authorize('Finance Manager'), async (req, res) =>
       // Don't fail invoice creation if logging fails
       console.error('Error creating system event log:', logError.message);
     }
-    
+
     res.status(201).json(freshInvoice);
   } catch (error) {
     console.error('Invoice creation error:', error);
@@ -159,7 +159,7 @@ router.put('/:id', authenticate, authorize('Finance Manager'), async (req, res) 
     if (!invoice) {
       return res.status(404).json({ error: 'Invoice not found' });
     }
-    
+
     res.json(invoice);
   } catch (error) {
     res.status(500).json({ error: error.message });

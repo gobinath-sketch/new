@@ -1,97 +1,91 @@
 .sales-pipeline-chart-container {
-  background: #0f172a; /* Dark blue background matching infographic */
-  background-image: 
-    radial-gradient(circle at 2px 2px, rgba(255, 255, 255, 0.05) 1px, transparent 0),
-    radial-gradient(circle at 18px 18px, rgba(255, 255, 255, 0.05) 1px, transparent 0);
-  background-size: 20px 20px;
-  border-radius: 12px;
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  border-radius: 16px;
   padding: 24px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-  margin: 20px 0;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+  margin: 0;
   position: relative;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  overflow: hidden;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
 
 .chart-header {
-  margin-bottom: 20px;
-  text-align: center;
+  margin-bottom: 25px;
+  text-align: left;
   position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding-left: 10px;
 }
 
 .chart-toggle-btn {
   position: absolute;
   top: 0;
   right: 0;
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 6px;
-  color: #ffffff;
-  width: 36px;
-  height: 36px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  color: #94a3b8;
+  width: 32px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.2s ease;
+  cursor: pointer;
   padding: 0;
 }
 
 .chart-toggle-btn:hover {
-  background: rgba(255, 255, 255, 0.2);
-  border-color: rgba(255, 255, 255, 0.4);
-  transform: scale(1.05);
-}
-
-.chart-toggle-btn svg {
-  stroke: #ffffff;
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
 }
 
 .chart-title-bar {
-  background-color: rgba(255, 255, 255, 0.98);
-  color: #0f172a;
-  padding: 14px 32px;
-  font-size: 20px;
-  font-weight: 700;
-  letter-spacing: 3px;
+  background: transparent;
+  color: #e2e8f0;
+  padding: 0;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
   text-transform: uppercase;
-  display: inline-block;
-  border-radius: 6px;
-  margin-bottom: 10px;
-  font-family: 'Inter', 'Segoe UI', -apple-system, sans-serif;
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
-  transition: all 0.3s ease;
+  display: block;
+  margin-bottom: 4px;
+  font-family: 'Inter', sans-serif;
+  box-shadow: none;
 }
 
 .chart-title-bar:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-  transform: translateY(-1px);
+  transform: none;
+  box-shadow: none;
 }
 
 .chart-subtitle {
-  color: rgba(255, 255, 255, 0.9);
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  font-family: 'Inter', sans-serif;
+  color: #94a3b8;
+  font-size: 12px;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
 }
 
 .chart-wrapper {
-  background-color: rgba(15, 23, 42, 0.5);
-  border-radius: 12px;
-  padding: 24px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  overflow-x: auto;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  min-height: 500px;
-  transition: all 0.3s ease;
+  background: transparent;
+  border-radius: 0;
+  padding: 0;
+  display: block;
+  overflow: visible;
+  border: none;
+  min-height: 450px;
 }
 
 .chart-wrapper:hover {
-  border-color: rgba(255, 255, 255, 0.2);
-  background-color: rgba(15, 23, 42, 0.6);
+  background: transparent;
+  border: none;
 }
 
 /* Recharts specific styling */
@@ -127,7 +121,8 @@
 .grid-line {
   stroke: rgba(255, 255, 255, 0.15);
   stroke-width: 1;
-  stroke-dasharray: none; /* Solid lines like infographic */
+  stroke-dasharray: none;
+  /* Solid lines like infographic */
 }
 
 /* Axis lines */
@@ -155,20 +150,16 @@
 }
 
 /* Pipeline line */
-.pipeline-line {
-  stroke: #ffffff;
-  stroke-width: 3;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.3));
+.pipeline-line path {
+  filter: drop-shadow(0 0 8px rgba(16, 185, 129, 0.4));
 }
 
 /* Data points */
 .data-point {
-  fill: #ffffff;
-  stroke: #1e3a8a;
+  fill: #0f172a;
+  stroke: #34d399;
   stroke-width: 2;
-  filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.5));
+  stroke-dasharray: none;
 }
 
 /* Data labels (percentages above points) - matching infographic */
@@ -191,26 +182,24 @@
 /* Chart legend */
 .chart-legend {
   display: flex;
-  justify-content: space-around;
-  margin-top: 28px;
-  padding: 24px 20px;
-  border-top: 1px solid rgba(255, 255, 255, 0.2);
-  background: rgba(15, 23, 42, 0.3);
-  border-radius: 8px;
+  justify-content: flex-start;
+  margin-top: 10px;
+  padding: 20px 0 0 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  background: transparent;
   flex-wrap: wrap;
-  gap: 24px;
-  backdrop-filter: blur(10px);
+  gap: 40px;
 }
 
 .legend-item {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-start;
   gap: 4px;
 }
 
 .legend-label {
-  color: rgba(255, 255, 255, 0.8);
+  color: #94a3b8;
   font-size: 11px;
   font-weight: 500;
   text-transform: uppercase;
@@ -218,16 +207,18 @@
 }
 
 .legend-value {
-  color: #ffffff;
-  font-size: 18px;
-  font-weight: 700;
+  color: #e2e8f0;
+  font-size: 24px;
+  font-weight: 600;
+  letter-spacing: -0.5px;
 }
 
 .legend-value.highlight {
-  color: #fbbf24;
-  text-shadow: 0 0 8px rgba(251, 191, 36, 0.5);
-  font-weight: 800;
-  font-size: 20px;
+  color: #34d399;
+  /* Green for success */
+  text-shadow: 0 0 15px rgba(52, 211, 153, 0.2);
+  font-weight: 700;
+  font-size: 24px;
 }
 
 /* Professional data point styling */
@@ -253,19 +244,9 @@
 }
 
 /* Professional animations */
+/* Professional animations removed for static stability */
 .sales-pipeline-chart-container {
-  animation: fadeIn 0.5s ease-in;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  /* animation: fadeIn 0.5s ease-in; REMOVED */
 }
 
 /* Responsive adjustments */
@@ -273,12 +254,12 @@
   .sales-pipeline-chart-container {
     padding: 16px;
   }
-  
+
   .chart-wrapper {
     overflow-x: auto;
     padding: 16px;
   }
-  
+
   .chart-title-bar {
     font-size: 16px;
     padding: 12px 24px;

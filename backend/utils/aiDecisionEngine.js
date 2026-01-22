@@ -41,7 +41,7 @@ const callAI = async (prompt, systemPrompt = null) => {
       return { result: content };
     }
   } catch (error) {
-    console.error('AI Decision Engine Error:', error.message);
+    // Suppress log noise for expected failures (e.g. 401/500)
     throw error;
   }
 };
@@ -75,7 +75,7 @@ Return JSON with:
 }`;
 
   const result = await callAI(prompt, 'You are a tax compliance expert. Return only valid JSON.');
-  
+
   return {
     tdsSection: result.tdsSection || 'None',
     payeeType: result.payeeType || 'Company/Firm/LLP',
@@ -114,7 +114,7 @@ Return JSON:
 }`;
 
   const result = await callAI(prompt, 'You are a financial analyst. Return only valid JSON.');
-  
+
   return {
     grossMarginPercent: result.grossMarginPercent || 0,
     marginStatus: result.marginStatus || 'Below Threshold',
@@ -149,7 +149,7 @@ Return JSON:
 }`;
 
   const result = await callAI(prompt, 'You are a business head making deal approval decisions. Return only valid JSON.');
-  
+
   return {
     shouldApprove: result.shouldApprove !== undefined ? result.shouldApprove : true,
     reason: result.reason || 'AI evaluation pending',
@@ -181,7 +181,7 @@ Return JSON:
 }`;
 
   const result = await callAI(prompt, 'You are a tax classification expert. Return only valid JSON.');
-  
+
   return {
     natureOfService: result.natureOfService || 'Other',
     confidence: result.confidence || 'Medium',
@@ -209,7 +209,7 @@ Return JSON:
 }`;
 
   const result = await callAI(prompt, 'You are an automation decision engine. Return only valid JSON.');
-  
+
   return {
     shouldGenerate: result.shouldGenerate !== undefined ? result.shouldGenerate : true,
     documentsToGenerate: result.documentsToGenerate || [],
@@ -240,7 +240,7 @@ Return JSON:
 }`;
 
   const result = await callAI(prompt, 'You are a financial calculator. Return only valid JSON.');
-  
+
   return {
     taxAmount: result.taxAmount || 0,
     totalAmount: result.totalAmount || invoiceData.invoiceAmount,
@@ -268,7 +268,7 @@ Return JSON:
 }`;
 
   const result = await callAI(prompt, 'You are a risk assessment expert. Return only valid JSON.');
-  
+
   return {
     riskLevel: result.riskLevel || 'Medium',
     riskFactors: result.riskFactors || [],

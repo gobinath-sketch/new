@@ -1577,6 +1577,39 @@ button[style*="background-color"]:hover {
   margin-top: var(--spacing-lg);
 }
 
+/* Combo Field */
+.combo {
+  position: relative;
+}
+.combo-input {
+  width: 100%;
+}
+.combo-list {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  box-shadow: 0 8px 16px rgba(0,0,0,0.08);
+  max-height: 220px;
+  overflow: auto;
+  z-index: 20;
+}
+.combo-item {
+  padding: 10px 14px;
+  font-size: var(--font-size-base);
+  color: #1f2937;
+  cursor: pointer;
+}
+.combo-item:hover,
+.combo-item.active {
+  background: #f0f7ff;
+  color: #111827;
+  font-weight: 500;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
   .contact-group-fields {

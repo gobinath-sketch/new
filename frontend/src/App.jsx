@@ -11,7 +11,7 @@ import Invoices from './pages/Invoices';
 import Receivables from './pages/Receivables';
 import Payables from './pages/Payables';
 import DealRequests from './pages/DealRequests';
-import TaxEngine from './pages/TaxEngine';
+import GP from './pages/GP';
 import Governance from './pages/Governance';
 import Opportunities from './pages/Opportunities';
 import ClientCreation from './pages/ClientCreation';
@@ -70,7 +70,7 @@ function App() {
         <Route path="/client-creation" element={user ? <Layout user={user} setUser={setUser}><ClientCreation user={user} /></Layout> : <Navigate to="/login" />} />
         <Route path="/clients/:id" element={user ? <Layout user={user} setUser={setUser}><ClientDetail user={user} /></Layout> : <Navigate to="/login" />} />
         <Route path="/opportunity-creation" element={user ? <Layout user={user} setUser={setUser}><OpportunityCreation user={user} /></Layout> : <Navigate to="/login" />} />
-        <Route path="/tax-engine" element={user ? <Layout user={user} setUser={setUser}><TaxEngine user={user} /></Layout> : <Navigate to="/login" />} />
+        <Route path="/gp" element={user ? <Layout user={user} setUser={setUser}><GP user={user} /></Layout> : <Navigate to="/login" />} />
         <Route path="/governance" element={user ? <Layout user={user} setUser={setUser}><Governance user={user} /></Layout> : <Navigate to="/login" />} />
         <Route path="/profile" element={user ? <Layout user={user} setUser={setUser}><Profile user={user} setUser={setUser} /></Layout> : <Navigate to="/login" />} />
         <Route path="/settings" element={user ? <Layout user={user} setUser={setUser}><Settings user={user} /></Layout> : <Navigate to="/login" />} />

@@ -97,14 +97,14 @@ const NotificationBell = ({ user }) => {
 
   return (
     <div className="notification-bell-container" ref={bellRef}>
-      <div 
+      <div
         className={`notification-bell ${unreadCount > 0 ? 'has-notifications' : ''}`}
         onClick={handleBellClick}
         title={unreadCount > 0 ? `${unreadCount} unread notification${unreadCount > 1 ? 's' : ''}` : 'No notifications'}
       >
-        <img 
-          src={bellIcon} 
-          alt="Notifications" 
+        <img
+          src={bellIcon}
+          alt="Notifications"
           className="bell-icon"
         />
         {unreadCount > 0 && (
@@ -113,7 +113,7 @@ const NotificationBell = ({ user }) => {
           </div>
         )}
       </div>
-      
+
       {showPopup && (
         <NotificationPopup
           notifications={notifications}

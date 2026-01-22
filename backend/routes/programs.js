@@ -6,7 +6,7 @@ import { AuditTrail } from '../models/Governance.js';
 
 const router = express.Router();
 
-router.get('/', authenticate, authorize('Operations Manager'), async (req, res) => {
+router.get('/', authenticate, authorize('Operations Manager', 'Finance Manager', 'Director', 'Business Head'), async (req, res) => {
   try {
     const programs = await Program.find().populate('primaryTrainer backupTrainer').sort({ createdAt: -1 });
     res.json(programs);
@@ -37,7 +37,7 @@ router.post('/', authenticate, authorize('Operations Manager'), async (req, res)
     const programCode = await generateProgramCode(Program);
     const program = new Program({ ...req.body, programCode });
     await program.save();
-    
+
     await AuditTrail.create({
       action: 'Program Created',
       entityType: 'Program',
@@ -56,7 +56,7 @@ router.post('/', authenticate, authorize('Operations Manager'), async (req, res)
       req.user._id,
       { programName: program.programName || program.programCode }
     );
-    
+
     res.status(201).json(program);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -69,10 +69,10 @@ router.put('/:id', authenticate, authorize('Operations Manager', 'Business Head'
     if (!program) {
       return res.status(404).json({ error: 'Program not found' });
     }
-    
+
     // Business Head and Director can approve/reject
-    if ((req.user.role === 'Business Head' || req.user.role === 'Director') && 
-        (req.body.trainingStatus === 'Approved' || req.body.trainingStatus === 'Rejected')) {
+    if ((req.user.role === 'Business Head' || req.user.role === 'Director') &&
+      (req.body.trainingStatus === 'Approved' || req.body.trainingStatus === 'Rejected')) {
       if (req.body.trainingStatus === 'Approved') {
         req.body.approvedBy = req.user._id;
         req.body.approvedAt = new Date();
@@ -81,10 +81,10 @@ router.put('/:id', authenticate, authorize('Operations Manager', 'Business Head'
         req.body.rejectedAt = new Date();
       }
     }
-    
+
     Object.assign(program, req.body);
     await program.save();
-    
+
     await AuditTrail.create({
       action: 'Program Updated',
       entityType: 'Program',
@@ -93,7 +93,7 @@ router.put('/:id', authenticate, authorize('Operations Manager', 'Business Head'
       userRole: req.user.role,
       changes: req.body
     });
-    
+
     res.json(program);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -103,21 +103,21 @@ router.put('/:id', authenticate, authorize('Operations Manager', 'Business Head'
 router.put('/:id/signoff', authenticate, authorize('Operations Manager'), async (req, res) => {
   try {
     const { type } = req.body;
-    const update = type === 'trainer' 
+    const update = type === 'trainer'
       ? { trainerSignOff: true, trainerSignOffDate: new Date() }
       : { clientSignOff: true, clientSignOffDate: new Date() };
-    
+
     const program = await Program.findByIdAndUpdate(req.params.id, update, { new: true });
     if (!program) {
       return res.status(404).json({ error: 'Program not found' });
     }
-    
+
     // Auto-draft invoice when client signs off
     if (type === 'client' && program.clientSignOff) {
       const { autoDraftInvoiceFromProgram } = await import('../utils/autoGeneration.js');
       await autoDraftInvoiceFromProgram(program, req.user._id, req.user.role);
     }
-    
+
     res.json(program);
   } catch (error) {
     res.status(500).json({ error: error.message });

@@ -1,5 +1,8 @@
 .notification-bell-container {
-  position: relative;
+  position: fixed;
+  top: 12px;
+  right: 24px;
+  z-index: 1000;
   display: inline-block;
 }
 
@@ -82,10 +85,12 @@
     transform: translate(-50%, -50%) scale(1);
     opacity: 1;
   }
+
   50% {
     transform: translate(-50%, -50%) scale(2);
     opacity: 0.6;
   }
+
   100% {
     transform: translate(-50%, -50%) scale(3);
     opacity: 0;
@@ -97,12 +102,16 @@
 }
 
 @keyframes bell-shake {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: rotate(0deg);
   }
+
   25% {
     transform: rotate(-10deg);
   }
+
   75% {
     transform: rotate(10deg);
   }

@@ -7,7 +7,7 @@ import Governance from '../models/Governance.js';
 
 const router = express.Router();
 
-router.get('/', authenticate, authorize('Business Head', 'Director'), async (req, res) => {
+router.get('/', authenticate, authorize('Business Head', 'Director', 'Sales Executive', 'Sales Manager', 'Operations Manager', 'Finance Manager'), async (req, res) => {
   try {
     const deals = await Deal.find().sort({ createdAt: -1 });
     res.json(deals);
@@ -49,7 +49,7 @@ router.get('/:id/download', authenticate, authorize('Business Head', 'Director')
   }
 });
 
-router.get('/:id', authenticate, authorize('Business Head', 'Director'), async (req, res) => {
+router.get('/:id', authenticate, authorize('Business Head', 'Director', 'Sales Executive', 'Sales Manager', 'Operations Manager', 'Finance Manager'), async (req, res) => {
   try {
     const deal = await Deal.findById(req.params.id);
     if (!deal) {
@@ -61,40 +61,55 @@ router.get('/:id', authenticate, authorize('Business Head', 'Director'), async (
   }
 });
 
-router.post('/', authenticate, authorize('Business Head', 'Operations Manager'), async (req, res) => {
+router.post('/', authenticate, authorize('Business Head', 'Operations Manager', 'Sales Executive', 'Sales Manager'), async (req, res) => {
   try {
     const dealId = await generateDealId(Deal);
     const deal = new Deal({ ...req.body, dealId });
     await deal.save();
-    
+
     // If created from Opportunity, link it
     if (req.body.opportunityId) {
       const Opportunity = (await import('../models/Opportunity.js')).default;
       const opportunity = await Opportunity.findById(req.body.opportunityId);
-      if (opportunity && opportunity.opportunityStatus === 'Sent to Delivery') {
+      if (opportunity && ['Qualified', 'Sent to Delivery'].includes(opportunity.opportunityStatus)) {
         opportunity.opportunityStatus = 'Converted to Deal';
         opportunity.convertedToDealId = deal._id;
         opportunity.convertedAt = new Date();
         await opportunity.save();
+
+        // Create notification for conversion
+        const { createNotification } = await import('../utils/notificationService.js');
+        await createNotification(
+          'opportunity_converted',
+          'Opportunity',
+          opportunity._id,
+          req.user._id,
+          { adhocId: opportunity.opportunityId }
+        );
       }
     }
-    
-    // Use AI for risk assessment
-    const { assessRiskWithAI } = await import('../utils/aiDecisionEngine.js');
-    const riskAssessment = await assessRiskWithAI('Deal', {
-      dealId: deal.dealId,
-      totalOrderValue: deal.totalOrderValue,
-      grossMarginPercent: deal.grossMarginPercent,
-      marginThresholdStatus: deal.marginThresholdStatus
-    });
-    
+
+    // Use AI for risk assessment with Fallback
+    let riskAssessment = { riskLevel: 'Medium', riskScore: 50, reasoning: 'AI Service Unavailable - Defaulting to Medium' };
+    try {
+      const { assessRiskWithAI } = await import('../utils/aiDecisionEngine.js');
+      riskAssessment = await assessRiskWithAI('Deal', {
+        dealId: deal.dealId,
+        totalOrderValue: deal.totalOrderValue,
+        grossMarginPercent: deal.grossMarginPercent,
+        marginThresholdStatus: deal.marginThresholdStatus
+      });
+    } catch (aiError) {
+      // AI service unavailable, proceeding with default risk assessment (Safe Mode)
+    }
+
     const governance = new Governance({
       dealId: deal._id,
       lossMakingProjectFlag: riskAssessment.riskLevel === 'High' || deal.marginThresholdStatus === 'Below Threshold',
       directorApprovalRequired: riskAssessment.riskLevel === 'High' || deal.marginThresholdStatus === 'Below Threshold'
     });
     await governance.save();
-    
+
     await AuditTrail.create({
       action: 'Deal Created',
       entityType: 'Deal',
@@ -103,7 +118,7 @@ router.post('/', authenticate, authorize('Business Head', 'Operations Manager'),
       userRole: req.user.role,
       changes: req.body
     });
-    
+
     res.status(201).json(deal);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -116,23 +131,28 @@ router.put('/:id', authenticate, authorize('Business Head'), async (req, res) =>
     if (!deal) {
       return res.status(404).json({ error: 'Deal not found' });
     }
-    
+
     const governance = await Governance.findOne({ dealId: deal._id });
     if (governance) {
-      // Use AI for risk assessment
-      const { assessRiskWithAI } = await import('../utils/aiDecisionEngine.js');
-      const riskAssessment = await assessRiskWithAI('Deal', {
-        dealId: deal.dealId,
-        totalOrderValue: deal.totalOrderValue,
-        grossMarginPercent: deal.grossMarginPercent,
-        marginThresholdStatus: deal.marginThresholdStatus
-      });
-      
+      // Use AI for risk assessment with Fallback
+      let riskAssessment = { riskLevel: 'Medium' };
+      try {
+        const { assessRiskWithAI } = await import('../utils/aiDecisionEngine.js');
+        riskAssessment = await assessRiskWithAI('Deal', {
+          dealId: deal.dealId,
+          totalOrderValue: deal.totalOrderValue,
+          grossMarginPercent: deal.grossMarginPercent,
+          marginThresholdStatus: deal.marginThresholdStatus
+        });
+      } catch (aiError) {
+        // AI service unavailable, proceeding with default (Safe Mode)
+      }
+
       governance.lossMakingProjectFlag = riskAssessment.riskLevel === 'High' || deal.marginThresholdStatus === 'Below Threshold';
       governance.directorApprovalRequired = riskAssessment.riskLevel === 'High' || deal.marginThresholdStatus === 'Below Threshold';
       await governance.save();
     }
-    
+
     res.json(deal);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -145,12 +165,12 @@ router.put('/:id/approve', authenticate, authorize('Director'), async (req, res)
     if (!deal) {
       return res.status(404).json({ error: 'Deal not found' });
     }
-    
+
     deal.approvalStatus = 'Approved';
     deal.approvalTimestamp = new Date();
     deal.approvedBy = req.user._id;
     await deal.save();
-    
+
     const governance = await Governance.findOne({ dealId: deal._id });
     if (governance) {
       governance.approvalHistory.push({
@@ -161,7 +181,7 @@ router.put('/:id/approve', authenticate, authorize('Director'), async (req, res)
       });
       await governance.save();
     }
-    
+
     res.json(deal);
   } catch (error) {
     res.status(500).json({ error: error.message });

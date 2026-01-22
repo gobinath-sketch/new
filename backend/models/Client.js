@@ -23,7 +23,13 @@ const clientSchema = new mongoose.Schema({
   contactNumber: {
     type: [String],
     required: true,
-    default: []
+    default: [],
+    validate: {
+      validator: function (v) {
+        return v.every(num => /^\d{10}$/.test(num));
+      },
+      message: 'Phone numbers must be exactly 10 digits'
+    }
   },
   emailId: {
     type: String,
@@ -33,6 +39,9 @@ const clientSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  linkedinProfile: {
+    type: String
+  },
   hasReportingManager: {
     type: Boolean,
     default: false
@@ -41,7 +50,14 @@ const clientSchema = new mongoose.Schema({
     type: String
   },
   reportingManagerContactNumber: {
-    type: String
+    type: String,
+    validate: {
+      validator: function (v) {
+        if (!v) return true; // Optional
+        return /^\d{10}$/.test(v);
+      },
+      message: 'Reporting Manager phone number must be exactly 10 digits'
+    }
   },
   reportingManagerEmailId: {
     type: String
@@ -64,7 +80,7 @@ const clientSchema = new mongoose.Schema({
   }
 });
 
-clientSchema.pre('save', function(next) {
+clientSchema.pre('save', function (next) {
   this.updatedAt = Date.now();
   next();
 });

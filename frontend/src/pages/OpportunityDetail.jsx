@@ -10,7 +10,12 @@ const OpportunityDetail = ({ user }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchOpportunity();
+    if (id && id !== 'undefined') {
+      fetchOpportunity();
+    } else {
+      console.warn('Invalid Opportunity ID:', id);
+      setLoading(false);
+    }
   }, [id]);
 
   const fetchOpportunity = async () => {
@@ -37,8 +42,8 @@ const OpportunityDetail = ({ user }) => {
     <div>
       <div className="page-header">
         <h1 className="page-title">Opportunity Details</h1>
-        <button 
-          onClick={() => navigate('/')} 
+        <button
+          onClick={() => navigate('/')}
           className="btn-close"
           title="Close and return to Dashboard"
         >
@@ -48,7 +53,7 @@ const OpportunityDetail = ({ user }) => {
 
       <div className="form-card">
         <h2>Opportunity Information</h2>
-        
+
         <div className="form-grid">
           <div className="form-group">
             <label><strong>Adhoc ID</strong></label>
@@ -274,7 +279,7 @@ const OpportunityDetail = ({ user }) => {
           <div className="form-group">
             <label><strong>Final GP (Gross Profit)</strong></label>
             <div style={{ fontSize: '18px', fontWeight: 'bold', color: opportunity.finalGP >= 0 ? '#28a745' : '#dc3545' }}>
-              {opportunity.tov && opportunity.tov > 0 
+              {opportunity.tov && opportunity.tov > 0
                 ? `${((opportunity.finalGP || 0) / opportunity.tov * 100).toFixed(2)}% (₹${(opportunity.finalGP || 0).toLocaleString()})`
                 : `₹${(opportunity.finalGP || 0).toLocaleString()}`
               }

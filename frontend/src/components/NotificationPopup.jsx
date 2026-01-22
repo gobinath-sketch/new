@@ -14,7 +14,7 @@ const NotificationPopup = ({ notifications, unreadCount, onNotificationClick, on
     if (diffMins < 60) return `${diffMins}m ago`;
     if (diffHours < 24) return `${diffHours}h ago`;
     if (diffDays < 7) return `${diffDays}d ago`;
-    
+
     return date.toLocaleDateString();
   };
 
@@ -59,7 +59,7 @@ const NotificationPopup = ({ notifications, unreadCount, onNotificationClick, on
                   </div>
                   {!notification.read && <div className="unread-indicator"></div>}
                 </div>
-                
+
                 <div className="notification-item-content">
                   <div className="notification-item-header">
                     <h4 className="notification-title">{notification.title}</h4>

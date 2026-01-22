@@ -24,7 +24,7 @@ router.get('/', authenticate, authorize('Finance Manager', 'Director'), async (r
 router.get('/export/excel', authenticate, authorize('Finance Manager', 'Director'), async (req, res) => {
   try {
     const payables = await Payable.find().populate('vendorId').sort({ createdAt: -1 });
-    
+
     const { generatePayablesExcel } = await import('../utils/excelGenerator.js');
     const workbook = generatePayablesExcel(payables);
 
@@ -39,7 +39,7 @@ router.get('/export/excel', authenticate, authorize('Finance Manager', 'Director
 
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     res.setHeader('Content-Disposition', 'attachment; filename="Payables-Report.xlsx"');
-    
+
     await workbook.xlsx.write(res);
     res.end();
   } catch (error) {
@@ -94,72 +94,98 @@ router.get('/:id', authenticate, authorize('Finance Manager', 'Director'), async
 
 router.post('/', authenticate, authorize('Finance Manager'), async (req, res) => {
   try {
-    const po = await PurchaseOrder.findById(req.body.purchaseOrderId);
-    if (!po) {
-      return res.status(404).json({ error: 'Purchase Order not found' });
+    let payableData = { ...req.body };
+    let vendorData = null;
+
+    // Strict Mode: Existing Logic via Purchase Order
+    if (req.body.purchaseOrderId) {
+      const po = await PurchaseOrder.findById(req.body.purchaseOrderId);
+      if (!po) return res.status(404).json({ error: 'Purchase Order not found' });
+
+      const vendor = await Vendor.findById(po.vendorId);
+      if (!vendor) return res.status(404).json({ error: 'Vendor not found' });
+
+      vendorData = vendor; // Store for TDS
+      payableData = {
+        ...payableData,
+        purchaseOrderId: po._id,
+        vendorId: po.vendorId,
+        vendorName: vendor.vendorName,
+        approvedCost: po.approvedCost,
+        adjustedPayableAmount: po.adjustedPayableAmount || po.approvedCost,
+        outstandingAmount: po.adjustedPayableAmount || po.approvedCost
+      };
+    } else {
+      // Direct Entry Mode
+      // Generate a payout ref if one doesn't exist
+      if (!payableData.vendorPayoutReference) {
+        const payoutReference = await generateVendorPayoutReference(Payable);
+        payableData.vendorPayoutReference = payoutReference;
+      }
+
+      // Ensure standard fields if missing
+      if (!payableData.adjustedPayableAmount && (payableData.amount || payableData.taxableAmount)) {
+        payableData.adjustedPayableAmount = parseFloat(payableData.amount || payableData.taxableAmount);
+        payableData.outstandingAmount = payableData.adjustedPayableAmount;
+      }
+
+      // Map 'amount' (from simple forms) to 'taxableAmount' so it is saved in DB
+      if (!payableData.taxableAmount && payableData.amount) {
+        payableData.taxableAmount = parseFloat(payableData.amount);
+      }
+
+      // Calculate Due Date
+      if (!payableData.dueDate) {
+        const dDate = new Date();
+        dDate.setDate(dDate.getDate() + (parseInt(req.body.paymentTerms) || 30));
+        payableData.dueDate = dDate;
+      }
     }
-    
-    const vendor = await Vendor.findById(po.vendorId);
-    if (!vendor) {
-      return res.status(404).json({ error: 'Vendor not found' });
+
+    const payable = new Payable(payableData);
+    await payable.save();
+
+    // Auto-calculate TDS only if we have full Vendor Data contexts
+    // (Skipping complex AI/TDS for simple Direct Entry to avoid errors, 
+    // unless vendorId is passed directly in future)
+    let taxRecord = null;
+    if (vendorData) {
+      // ... (Keep existing TDS Logic) ...
+      const currentYear = new Date().getFullYear();
+      const vendorYearlyTotal = await getVendorYearlyTotal(Vendor, Payable, vendorData._id, currentYear);
+
+      const { classifyTaxWithAI } = await import('../utils/aiDecisionEngine.js');
+      const taxClassification = await classifyTaxWithAI(
+        vendorData.vendorType,
+        `Payment for services from ${vendorData.vendorName}`,
+        payable.adjustedPayableAmount
+      );
+      const natureOfService = taxClassification.natureOfService;
+
+      const tdsCalculation = await calculateTDS(
+        vendorData.vendorType,
+        natureOfService,
+        payable.adjustedPayableAmount,
+        vendorData.panNumber,
+        vendorYearlyTotal
+      );
+
+      taxRecord = new TaxEngine({
+        payableId: payable._id,
+        vendorId: vendorData._id,
+        vendorType: vendorData.vendorType,
+        natureOfService,
+        ...tdsCalculation,
+        paymentAmount: payable.adjustedPayableAmount,
+        panNumber: vendorData.panNumber
+      });
+      await taxRecord.save();
+
+      // Update payable with net amount
+      payable.outstandingAmount = taxRecord.netPayableAmount;
+      await payable.save();
     }
-    
-    const payoutReference = await generateVendorPayoutReference(Payable);
-    const dueDate = new Date();
-    dueDate.setDate(dueDate.getDate() + (req.body.paymentTerms || 30));
-    
-    const payable = new Payable({
-      ...req.body,
-      purchaseOrderId: po._id,
-      vendorId: po.vendorId,
-      vendorName: vendor.vendorName,
-      vendorPayoutReference: payoutReference,
-      approvedCost: po.approvedCost,
-      adjustedPayableAmount: po.adjustedPayableAmount || po.approvedCost,
-      outstandingAmount: po.adjustedPayableAmount || po.approvedCost,
-      dueDate
-    });
-    await payable.save();
-    
-    // Auto-calculate TDS
-    const currentYear = new Date().getFullYear();
-    const vendorYearlyTotal = await getVendorYearlyTotal(Vendor, Payable, vendor._id, currentYear);
-    
-    // Use AI to classify nature of service
-    const { classifyTaxWithAI } = await import('../utils/aiDecisionEngine.js');
-    const taxClassification = await classifyTaxWithAI(
-      vendor.vendorType,
-      `Payment for ${po.costType || 'services'} from ${vendor.vendorName}`,
-      payable.adjustedPayableAmount
-    );
-    const natureOfService = taxClassification.natureOfService;
-    
-    // Use vendor type as-is for AI TDS calculation
-    const vendorTypeForTDS = vendor.vendorType;
-    
-    const tdsCalculation = await calculateTDS(
-      vendorTypeForTDS,
-      natureOfService,
-      payable.adjustedPayableAmount,
-      vendor.panNumber,
-      vendorYearlyTotal
-    );
-    
-    const taxRecord = new TaxEngine({
-      payableId: payable._id,
-      vendorId: vendor._id,
-      vendorType: vendorTypeForTDS,
-      natureOfService,
-      ...tdsCalculation,
-      paymentAmount: payable.adjustedPayableAmount,
-      panNumber: vendor.panNumber
-    });
-    await taxRecord.save();
-    
-    // Update payable with net amount after TDS
-    payable.outstandingAmount = taxRecord.netPayableAmount;
-    await payable.save();
-    
+
     await AuditTrail.create({
       action: 'Payable Created',
       entityType: 'Payable',
@@ -168,21 +194,23 @@ router.post('/', authenticate, authorize('Finance Manager'), async (req, res) =>
       userRole: req.user.role,
       changes: req.body
     });
-    
-    await SystemEventLog.create({
-      eventType: 'TDS Calculated',
-      entityType: 'Payable',
-      entityId: payable._id.toString(),
-      userId: req.user._id,
-      userRole: req.user.role,
-      action: 'Auto-calculated TDS on payable creation',
-      downstreamAction: 'Compliance log updated',
-      metadata: {
-        tdsSection: taxRecord.tdsSection,
-        tdsAmount: taxRecord.tdsAmount
-      }
-    });
-    
+
+    if (taxRecord) {
+      await SystemEventLog.create({
+        eventType: 'TDS Calculated',
+        entityType: 'Payable',
+        entityId: payable._id.toString(),
+        userId: req.user._id,
+        userRole: req.user.role,
+        action: 'Auto-calculated TDS on payable creation',
+        downstreamAction: 'Compliance log updated',
+        metadata: {
+          tdsSection: taxRecord.tdsSection,
+          tdsAmount: taxRecord.tdsAmount
+        }
+      });
+    }
+
     res.status(201).json({ payable, taxRecord });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -195,7 +223,7 @@ router.put('/:id', authenticate, authorize('Finance Manager'), async (req, res) 
     if (!payable) {
       return res.status(404).json({ error: 'Payable not found' });
     }
-    
+
     res.json(payable);
   } catch (error) {
     res.status(500).json({ error: error.message });

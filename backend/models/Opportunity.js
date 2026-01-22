@@ -58,12 +58,10 @@ const opportunitySchema = new mongoose.Schema({
   },
   // Additional fields for Sales Executive opportunity creation
   trainingOpportunity: {
-    type: String,
-    enum: ['Training', 'Vouchers', 'Resource Support', 'Lab support', 'Content development', 'Project Support']
+    type: String
   },
   trainingSector: {
-    type: String,
-    enum: ['Corporate', 'academics', 'university', 'college', 'school']
+    type: String
   },
   trainingStatus: {
     type: String,
@@ -71,8 +69,7 @@ const opportunitySchema = new mongoose.Schema({
     default: 'Scheduled'
   },
   trainingSupporter: {
-    type: String,
-    enum: ['GKT', 'GKCS', 'MCT']
+    type: String
   },
   sales: {
     type: String
