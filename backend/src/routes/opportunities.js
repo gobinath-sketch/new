@@ -392,9 +392,13 @@ router.get('/:id/download', authenticate, authorize('Sales Executive', 'Sales Ma
       return res.status(404).json({ error: 'Opportunity not found' });
     }
 
-    // Sales Executive can only download their own opportunities
-    if (req.user.role === 'Business Head' && req.user.subRole === 'SalesExecutive' && opportunity.salesExecutiveId.toString() !== req.user._id.toString()) {
-      return res.status(403).json({ error: 'Access denied' });
+    // Restrict BH sub-role SalesExecutive from downloading others' opportunities
+    if (req.user.role === 'Business Head' && req.user.subRole === 'SalesExecutive') {
+      const oppSeId = String(opportunity.salesExecutiveId?._id || opportunity.salesExecutiveId || '');
+      const requesterId = String(req.user._id || '');
+      if (oppSeId && requesterId && oppSeId !== requesterId) {
+        return res.status(403).json({ error: 'Access denied' });
+      }
     }
 
     const { generateOpportunityPDF } = await import('../utils/pdfGenerator.js');

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import api from '../services/api';
 import './Dashboard.css';
 import SalesPipelineChart from '../components/SalesPipelineChart.jsx';
@@ -62,6 +62,16 @@ const Dashboard = ({ user }) => {
     const [finSelectedMonth, setFinSelectedMonth] = useState(new Date().getMonth());
     const [finSelectedQuarter, setFinSelectedQuarter] = useState('Q1');
 
+    const gpFilterRef = useRef({ type: 'month', month: new Date().getMonth() + 1, quarter: 'Q1', year: new Date().getFullYear() });
+    useEffect(() => {
+        gpFilterRef.current = { type: gpFilterType, month: gpMonth, quarter: gpQuarter, year: gpYear };
+    }, [gpFilterType, gpMonth, gpQuarter, gpYear]);
+
+    const finFilterRef = useRef({ type: 'year', month: new Date().getMonth(), quarter: 'Q1' });
+    useEffect(() => {
+        finFilterRef.current = { type: finFilterType, month: finSelectedMonth, quarter: finSelectedQuarter };
+    }, [finFilterType, finSelectedMonth, finSelectedQuarter]);
+
     const userId = user?.id || user?._id;
     const usdRate = 83;
     const formatMoney = (amount) => {
@@ -107,36 +117,44 @@ const Dashboard = ({ user }) => {
         }
     };
 
-    const exportGpCsv = () => {
-        if (!gpReport?.clientData || !Array.isArray(gpReport.clientData)) return;
-        const header = ['S.No', 'Client Name', 'Total Revenue', 'Total Expenses', 'Gross Profit', 'GP %', 'Opportunities'];
-        const rows = gpReport.clientData.map((c) => [
-            c.sno,
-            String(c.clientName || ''),
-            Number(c.totalRevenue || 0),
-            Number(c.totalExpenses || 0),
-            Number(c.gp || 0),
-            Number(c.gpPercent || 0).toFixed(2),
-            Number(c.opportunityCount || 0)
-        ]);
-        const csv = [header, ...rows]
-            .map((r) => r.map((cell) => {
-                const s = String(cell ?? '');
-                if (s.includes(',') || s.includes('"') || s.includes('\n')) return `"${s.replace(/"/g, '""')}"`;
-                return s;
-            }).join(','))
-            .join('\n');
+    const [gpExportFormat, setGpExportFormat] = useState('xlsx');
 
-        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        const dateStr = new Date().toISOString().slice(0, 10);
-        a.download = `gp_report_${gpFilterType}_${dateStr}.csv`;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        setTimeout(() => URL.revokeObjectURL(url), 30_000);
+    const exportGpReport = async () => {
+        try {
+            const params = new URLSearchParams();
+            params.set('type', gpFilterRef.current.type);
+            params.set('year', String(gpFilterRef.current.year));
+            if (gpFilterRef.current.type === 'month') params.set('month', String(gpFilterRef.current.month));
+            if (gpFilterRef.current.type === 'quarter') params.set('quarter', String(gpFilterRef.current.quarter));
+            params.set('format', gpExportFormat);
+
+            const res = await api.get(`/reports/gp-analysis/export?${params.toString()}`, {
+                responseType: 'blob'
+            });
+
+            const format = String(gpExportFormat || 'xlsx').toLowerCase();
+            const blob = new Blob([res.data], {
+                type: format === 'csv'
+                    ? 'text/csv;charset=utf-8'
+                    : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            const dateStr = new Date().toISOString().slice(0, 10);
+            a.download = `gp_report_${gpFilterRef.current.type}_${gpFilterRef.current.year}_${dateStr}.${format}`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            setTimeout(() => URL.revokeObjectURL(url), 30_000);
+        } catch (e) {
+            modal.alert({
+                title: 'Export Failed',
+                message: e?.response?.data?.error || e.message || 'Failed to export report',
+                okText: 'Close',
+                type: 'danger'
+            });
+        }
     };
 
     useEffect(() => {
@@ -169,7 +187,12 @@ const Dashboard = ({ user }) => {
                     }
 
                     fetchMonthlyTrends();
-                    fetchGPReport();
+                    fetchGPReport({
+                        type: gpFilterRef.current.type,
+                        month: gpFilterRef.current.month,
+                        quarter: gpFilterRef.current.quarter,
+                        year: gpFilterRef.current.year
+                    });
                 }
 
                 // Operations Manager specific data fetching
@@ -204,8 +227,8 @@ const Dashboard = ({ user }) => {
                 if (user?.role === 'Finance Manager') {
                     try {
                         let timeline = 'thisYear';
-                        if (finFilterType === 'month') timeline = `month-${finSelectedMonth}`;
-                        else if (finFilterType === 'quarter') timeline = `quarter-${finSelectedQuarter}`;
+                        if (finFilterRef.current.type === 'month') timeline = `month-${finFilterRef.current.month}`;
+                        else if (finFilterRef.current.type === 'quarter') timeline = `quarter-${finFilterRef.current.quarter}`;
 
                         const [clientRes, vendorRes] = await Promise.all([
                             api.get(`/dashboards/finance/client-gp?timeline=${timeline}`),
@@ -1286,166 +1309,150 @@ const Dashboard = ({ user }) => {
 
             {user?.role === 'Sales Executive' && (
                 <div className="dashboard-section se-overview">
-                    <div className="page-header se-overview-header" style={{ marginBottom: '10px' }}>
-                        <h2 className="section-title" style={{ margin: 0 }}>Sales Executive Overview</h2>
-                        <div className="se-currency-toggle" style={{ display: 'flex', gap: '8px' }}>
-                            <button
-                                type="button"
-                                className={currency === 'INR' ? 'btn-small btn-primary' : 'btn-small'}
-                                onClick={() => setCurrency('INR')}
-                            >
-                                INR
-                            </button>
-                            <button
-                                type="button"
-                                className={currency === 'USD' ? 'btn-small btn-primary' : 'btn-small'}
-                                onClick={() => setCurrency('USD')}
-                            >
-                                USD
-                            </button>
+                    <div className="page-header se-overview-header se-header-row">
+                        <h2 className="section-title se-title">Sales Executive Overview</h2>
+                        <div className="se-header-actions">
+                            <div className="se-currency-toggle">
+                                <button type="button" className={currency === 'INR' ? 'btn-small btn-primary' : 'btn-small'} onClick={() => setCurrency('INR')}>INR</button>
+                                <button type="button" className={currency === 'USD' ? 'btn-small btn-primary' : 'btn-small'} onClick={() => setCurrency('USD')}>USD</button>
+                            </div>
                         </div>
                     </div>
 
-                    <div className="dashboard-grid">
+                    <div className="se-kpi-grid">
                         <DashboardCard title="Clients" value={`${(clientHealth.active || 0) + (clientHealth.mid || 0) + (clientHealth.inactive || 0)}`} />
                         <DashboardCard title="Active" count={clientHealth.active || 0} />
                         <DashboardCard title="Mid" count={clientHealth.mid || 0} />
                         <DashboardCard title="Inactive" count={clientHealth.inactive || 0} />
                     </div>
 
-                    <div className="form-card" style={{ marginTop: '10px' }}>
-                        <div className="page-header se-panel-header" style={{ marginBottom: '10px' }}>
-                            <h2 style={{ margin: 0 }}>Revenue Target Progress (Yearly)</h2>
+                    <div className="se-panels-grid">
+                        <div className="form-card se-panel">
+                            <div className="page-header se-panel-header">
+                                <h2 className="se-panel-title">Revenue Target Progress (Yearly)</h2>
+                            </div>
+                            <div className="se-progress-metrics">
+                                <div>
+                                    <div className="se-metric-label">Target</div>
+                                    <div className="se-metric-value">{formatMoney(performanceTarget)}</div>
+                                </div>
+                                <div>
+                                    <div className="se-metric-label">Achieved</div>
+                                    <div className="se-metric-value">{formatMoney(performanceAchieved)}</div>
+                                </div>
+                            </div>
+                            <div className="se-progress-bar">
+                                <div className="se-progress-track">
+                                    <div
+                                        className="se-progress-fill"
+                                        style={{
+                                            width: `${Math.min(100, Math.max(0, performancePct))}%`,
+                                            background: performancePct >= 100 ? 'var(--color-success)' : 'var(--color-primary)'
+                                        }}
+                                    />
+                                </div>
+                                <div className="se-progress-caption">
+                                    {performanceTarget > 0
+                                        ? (performanceDiff >= 0
+                                            ? `Exceeded by ${formatMoney(performanceDiff)}`
+                                            : `Lagging by ${formatMoney(Math.abs(performanceDiff))}`)
+                                        : 'No target set'}
+                                </div>
+                            </div>
                         </div>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                            <div>
-                                <div style={{ fontSize: '12px', opacity: 0.8 }}>Target</div>
-                                <div style={{ fontSize: '18px', fontWeight: 800 }}>{formatMoney(performanceTarget)}</div>
+
+                        {Array.isArray(docTracking) && docTracking.length > 0 && (
+                            <div className="form-card se-panel">
+                                <div className="page-header se-panel-header">
+                                    <h2 className="se-panel-title">Document Status</h2>
+                                </div>
+                                <div className="table-container" style={{ marginBottom: 0 }}>
+                                    <table className="data-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Adhoc ID</th>
+                                                <th>Client</th>
+                                                <th style={{ textAlign: 'center' }}>Proposal</th>
+                                                <th style={{ textAlign: 'center' }}>PO</th>
+                                                <th style={{ textAlign: 'center' }}>Invoice</th>
+                                                <th>Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {docTracking.map((row) => (
+                                                <tr key={row._id}>
+                                                    <td><strong>{row.opportunityId}</strong></td>
+                                                    <td>{row.clientName}</td>
+                                                    <td className={row.proposalPresent ? 'se-doc-ok' : 'se-doc-miss'} style={{ textAlign: 'center' }}>{row.proposalPresent ? '✓' : '—'}</td>
+                                                    <td className={row.poPresent ? 'se-doc-ok' : 'se-doc-miss'} style={{ textAlign: 'center' }}>{row.poPresent ? '✓' : '—'}</td>
+                                                    <td className={row.invoicePresent ? 'se-doc-ok' : 'se-doc-miss'} style={{ textAlign: 'center' }}>{row.invoicePresent ? '✓' : '—'}</td>
+                                                    <td>
+                                                        <button type="button" className="btn-small btn-primary" onClick={() => window.location.href = `/opportunities/${row._id}?tab=documents`}>Open</button>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
-                            <div>
-                                <div style={{ fontSize: '12px', opacity: 0.8 }}>Achieved</div>
-                                <div style={{ fontSize: '18px', fontWeight: 800 }}>{formatMoney(performanceAchieved)}</div>
-                            </div>
-                        </div>
-                        <div style={{ marginTop: '10px' }}>
-                            <div style={{ height: '10px', background: 'rgba(15,23,42,0.08)', borderRadius: '999px', overflow: 'hidden' }}>
-                                <div
-                                    style={{
-                                        height: '10px',
-                                        width: `${Math.min(100, Math.max(0, performancePct))}%`,
-                                        background: performancePct >= 100 ? 'var(--color-success)' : 'var(--color-primary)'
-                                    }}
-                                />
-                            </div>
-                            <div style={{ marginTop: '6px', fontSize: '12px', textAlign: 'right', opacity: 0.9 }}>
-                                {performanceTarget > 0
-                                    ? (performanceDiff >= 0
-                                        ? `Exceeded by ${formatMoney(performanceDiff)}`
-                                        : `Lagging by ${formatMoney(Math.abs(performanceDiff))}`)
-                                    : 'No target set'}
-                            </div>
-                        </div>
+                        )}
                     </div>
 
-                    {Array.isArray(docTracking) && docTracking.length > 0 && (
-                        <div className="dashboard-section" style={{ marginTop: '10px' }}>
-                            <h2 className="section-title">Document Status Tracking</h2>
-                            <div className="table-container">
-                                <table className="data-table">
-                                    <thead>
-                                        <tr>
-                                            <th>Adhoc ID</th>
-                                            <th>Client</th>
-                                            <th style={{ textAlign: 'center' }}>Proposal</th>
-                                            <th style={{ textAlign: 'center' }}>PO</th>
-                                            <th style={{ textAlign: 'center' }}>Invoice</th>
-                                            <th>Action</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {docTracking.map((row) => (
-                                            <tr key={row._id}>
-                                                <td><strong>{row.opportunityId}</strong></td>
-                                                <td>{row.clientName}</td>
-                                                <td className={row.proposalPresent ? 'se-doc-ok' : 'se-doc-miss'} style={{ textAlign: 'center' }}>{row.proposalPresent ? '✓' : '—'}</td>
-                                                <td className={row.poPresent ? 'se-doc-ok' : 'se-doc-miss'} style={{ textAlign: 'center' }}>{row.poPresent ? '✓' : '—'}</td>
-                                                <td className={row.invoicePresent ? 'se-doc-ok' : 'se-doc-miss'} style={{ textAlign: 'center' }}>{row.invoicePresent ? '✓' : '—'}</td>
-                                                <td>
-                                                    <button
-                                                        type="button"
-                                                        className="btn-small btn-primary"
-                                                        onClick={() => window.location.href = `/opportunities/${row._id}?tab=documents`}
-                                                    >
-                                                        Open
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
+                    <div className="se-panels-grid">
+                        <div className="form-card se-panel">
+                            <div className="page-header se-panel-header">
+                                <h2 className="se-panel-title">Monthly Trends</h2>
+                                <div className="se-panel-subtitle">Opportunities + Revenue</div>
                             </div>
-                        </div>
-                    )}
-
-                    <div className="dashboard-charts-grid se-analytics-grid" style={{ marginTop: '10px' }}>
-                        <div className="form-card" style={{ margin: 0 }}>
-                            <div className="page-header se-panel-header" style={{ marginBottom: '10px' }}>
-                                <h2 style={{ margin: 0 }}>Monthly Trends</h2>
-                                <div style={{ fontSize: '12px', opacity: 0.75 }}>Opportunities + Revenue</div>
-                            </div>
-                            <div style={{ width: '100%', height: 260 }}>
-                                <ResponsiveContainer>
+                            <div className="se-chart-slot">
+                                <ResponsiveContainer width="100%" height="100%">
                                     <AreaChart data={Array.isArray(monthlyTrends) ? monthlyTrends : []} margin={{ top: 10, right: 18, left: 0, bottom: 0 }}>
                                         <CartesianGrid stroke="rgba(15,23,42,0.08)" strokeDasharray="3 3" />
                                         <XAxis dataKey="name" tick={{ fontSize: 11 }} />
-                                        <YAxis tick={{ fontSize: 11 }} width={42} />
-                                        <Tooltip formatter={(v, n) => {
-                                            if (n === 'revenue') return [formatMoney(v), 'Revenue'];
-                                            return [v, 'Opportunities'];
-                                        }} />
-                                        <Area type="monotone" dataKey="revenue" stroke="var(--color-primary)" fill="rgba(99, 91, 255, 0.18)" strokeWidth={2} />
+                                        <YAxis tick={{ fontSize: 11 }} />
+                                        <Tooltip />
+                                        <Area type="monotone" dataKey="revenue" stroke="var(--color-primary)" fill="rgba(99,91,255,0.22)" strokeWidth={3} />
                                         <Area type="monotone" dataKey="opportunities" stroke="rgba(14,165,233,0.95)" fill="rgba(14,165,233,0.14)" strokeWidth={2} />
                                     </AreaChart>
                                 </ResponsiveContainer>
                             </div>
                         </div>
 
-                        <div className="form-card" style={{ margin: 0 }}>
-                            <div className="page-header se-panel-header" style={{ marginBottom: '10px' }}>
-                                <h2 style={{ margin: 0 }}>GP Report</h2>
-                                <button type="button" className="btn-small btn-primary" onClick={exportGpCsv} disabled={gpLoading || !gpReport?.clientData?.length}>
-                                    Export CSV
-                                </button>
+                        <div className="form-card se-panel">
+                            <div className="page-header se-panel-header">
+                                <h2 className="se-panel-title">GP Report</h2>
+                                <div className="se-export-controls">
+                                    <select className="form-control" value={gpExportFormat} onChange={(e) => setGpExportFormat(e.target.value)} style={{ width: 140 }}>
+                                        <option value="xlsx">Excel</option>
+                                        <option value="csv">CSV</option>
+                                    </select>
+                                    <button type="button" className="btn-small btn-primary" onClick={exportGpReport} disabled={gpLoading || !gpReport?.clientData?.length}>Export</button>
+                                </div>
                             </div>
 
-                            <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '12px', alignItems: 'center', marginBottom: '10px' }}>
-                                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                                    <button type="button" className={gpFilterType === 'month' ? 'btn-small btn-primary' : 'btn-small'} onClick={() => { setGpFilterType('month'); fetchGPReport({ type: 'month' }); }}>Month</button>
-                                    <button type="button" className={gpFilterType === 'quarter' ? 'btn-small btn-primary' : 'btn-small'} onClick={() => { setGpFilterType('quarter'); fetchGPReport({ type: 'quarter' }); }}>Quarter</button>
-                                    <button type="button" className={gpFilterType === 'fiscal_year' ? 'btn-small btn-primary' : 'btn-small'} onClick={() => { setGpFilterType('fiscal_year'); fetchGPReport({ type: 'fiscal_year' }); }}>Year</button>
+                            <div className="se-filter-row">
+                                <div className="se-filter-tabs">
+                                    <button type="button" className={gpFilterType === 'month' ? 'btn-small btn-primary' : 'btn-small'} onClick={() => { gpFilterRef.current = { ...gpFilterRef.current, type: 'month' }; setGpFilterType('month'); fetchGPReport({ type: 'month' }); }}>Month</button>
+                                    <button type="button" className={gpFilterType === 'quarter' ? 'btn-small btn-primary' : 'btn-small'} onClick={() => { gpFilterRef.current = { ...gpFilterRef.current, type: 'quarter' }; setGpFilterType('quarter'); fetchGPReport({ type: 'quarter' }); }}>Quarter</button>
+                                    <button type="button" className={gpFilterType === 'fiscal_year' ? 'btn-small btn-primary' : 'btn-small'} onClick={() => { gpFilterRef.current = { ...gpFilterRef.current, type: 'fiscal_year' }; setGpFilterType('fiscal_year'); fetchGPReport({ type: 'fiscal_year' }); }}>Year</button>
                                 </div>
-
-                                <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+                                <div className="se-filter-inputs">
                                     {gpFilterType === 'month' && (
-                                        <select className="form-control" value={gpMonth} onChange={(e) => { const v = Number(e.target.value); setGpMonth(v); fetchGPReport({ type: 'month', month: v }); }}>
-                                            {[1,2,3,4,5,6,7,8,9,10,11,12].map((m) => (
-                                                <option key={m} value={m}>{m}</option>
-                                            ))}
+                                        <select className="form-control" value={gpMonth} onChange={(e) => { const v = Number(e.target.value); gpFilterRef.current = { ...gpFilterRef.current, month: v }; setGpMonth(v); fetchGPReport({ type: 'month', month: v }); }}>
+                                            {[1,2,3,4,5,6,7,8,9,10,11,12].map((m) => (<option key={m} value={m}>{m}</option>))}
                                         </select>
                                     )}
                                     {gpFilterType === 'quarter' && (
-                                        <select className="form-control" value={gpQuarter} onChange={(e) => { const v = e.target.value; setGpQuarter(v); fetchGPReport({ type: 'quarter', quarter: v }); }}>
-                                            {['Q1','Q2','Q3','Q4'].map((q) => (
-                                                <option key={q} value={q}>{q}</option>
-                                            ))}
+                                        <select className="form-control" value={gpQuarter} onChange={(e) => { const v = e.target.value; gpFilterRef.current = { ...gpFilterRef.current, quarter: v }; setGpQuarter(v); fetchGPReport({ type: 'quarter', quarter: v }); }}>
+                                            {['Q1','Q2','Q3','Q4'].map((q) => (<option key={q} value={q}>{q}</option>))}
                                         </select>
                                     )}
-                                    <input className="form-control" type="number" value={gpYear} onChange={(e) => { const v = Number(e.target.value); setGpYear(v); fetchGPReport({ year: v }); }} style={{ width: 120 }} />
+                                    <input className="form-control" type="number" value={gpYear} onChange={(e) => { const v = Number(e.target.value); gpFilterRef.current = { ...gpFilterRef.current, year: v }; setGpYear(v); fetchGPReport({ year: v }); }} style={{ width: 120 }} />
                                 </div>
                             </div>
 
                             {gpReport?.summary && (
-                                <div className="dashboard-grid" style={{ marginBottom: '10px' }}>
+                                <div className="se-gp-kpis">
                                     <DashboardCard title="Revenue" value={formatMoney(gpReport.summary.totalRevenue || 0)} />
                                     <DashboardCard title="Expenses" value={formatMoney(gpReport.summary.totalExpenses || 0)} />
                                     <DashboardCard title="Gross Profit" value={formatMoney(gpReport.summary.grossProfit || 0)} />
@@ -1459,6 +1466,8 @@ const Dashboard = ({ user }) => {
                                         <tr>
                                             <th>S.No</th>
                                             <th>Client</th>
+                                            <th>Period</th>
+                                            <th>Sales Person</th>
                                             <th>Revenue</th>
                                             <th>Expenses</th>
                                             <th>GP %</th>
@@ -1470,6 +1479,8 @@ const Dashboard = ({ user }) => {
                                             <tr key={`${c.sno}-${c.clientName}`}>
                                                 <td>{c.sno}</td>
                                                 <td><strong>{c.clientName}</strong></td>
+                                                <td>{`${c.trainingMonth || 'N/A'}/${c.trainingYear || 'N/A'}`}</td>
+                                                <td>{c.salesPerson || 'N/A'}</td>
                                                 <td>{formatMoney(c.totalRevenue)}</td>
                                                 <td>{formatMoney(c.totalExpenses)}</td>
                                                 <td>{Number(c.gpPercent || 0).toFixed(2)}%</td>
@@ -1477,7 +1488,7 @@ const Dashboard = ({ user }) => {
                                             </tr>
                                         ))}
                                         {!gpLoading && (!gpReport?.clientData || gpReport.clientData.length === 0) && (
-                                            <tr><td colSpan="6" style={{ textAlign: 'center' }}>No data</td></tr>
+                                            <tr><td colSpan="8" style={{ textAlign: 'center' }}>No data</td></tr>
                                         )}
                                     </tbody>
                                 </table>

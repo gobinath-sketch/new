@@ -51,7 +51,7 @@ function App() {
   }
 
   return (
-    <BrowserRouter>
+    <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <Routes>
         <Route path="/login" element={!user ? <Login setUser={setUser} /> : <Navigate to="/" />} />
         <Route path="/" element={user ? <Layout user={user} setUser={setUser}><Dashboard user={user} /></Layout> : <Navigate to="/login" />} />

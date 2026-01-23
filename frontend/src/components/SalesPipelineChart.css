@@ -133,6 +133,8 @@
   overflow: visible;
   border: none;
   min-height: 300px;
+  min-width: 0;
+  width: 100%;
 }
 
 .chart-wrapper:hover {

@@ -3,6 +3,7 @@ import { useLocation, useParams, useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import './Table.css';
 import { useModal } from '../contexts/context/ModalContext.jsx';
+import FileUpload from '../components/FileUpload.jsx';
 
 const OpportunityDetail = ({ user }) => {
   const { id } = useParams();
@@ -39,6 +40,11 @@ const OpportunityDetail = ({ user }) => {
   }, [user?.role]);
 
   const tabKeys = useMemo(() => new Set(tabs.map((t) => t.key)), [tabs]);
+
+  const canUploadDocuments = useMemo(() => {
+    const role = user?.role;
+    return role === 'Sales Executive' || role === 'Sales Manager' || role === 'Operations Manager' || role === 'Finance Manager' || role === 'Business Head' || role === 'Director';
+  }, [user?.role]);
 
   const setTab = (next) => {
     const key = String(next || '').trim();
@@ -80,11 +86,6 @@ const OpportunityDetail = ({ user }) => {
   if (!opportunity) {
     return <div>Opportunity not found</div>;
   }
-
-  const canUploadDocuments = useMemo(() => {
-    const role = user?.role;
-    return role === 'Sales Executive' || role === 'Sales Manager' || role === 'Operations Manager' || role === 'Finance Manager' || role === 'Business Head' || role === 'Director';
-  }, [user?.role]);
 
   const openDoc = (url) => {
     if (!url) return;
@@ -375,16 +376,15 @@ const OpportunityDetail = ({ user }) => {
     <div className="form-grid">
       <div className="form-group" style={{ gridColumn: 'span 2' }}>
         <label><strong>Proposal</strong></label>
-        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '12px', alignItems: 'start' }}>
           <button type="button" className="btn-small btn-primary" disabled={!opportunity.proposalDocumentUpload} onClick={() => openDoc(opportunity.proposalDocumentUpload)}>Open</button>
           {canUploadDocuments && (
-            <input
-              type="file"
-              accept=".pdf,image/*,.doc,.docx,.xlsx,.xls"
-              disabled={uploading.proposal}
-              onChange={(e) => {
-                const f = e.target.files?.[0];
-                e.target.value = '';
+            <FileUpload
+              label={null}
+              multiple={false}
+              accept=".xlsx,.xls,.doc,.docx,.pdf,image/*"
+              onFilesChange={(files) => {
+                const f = files?.[0];
                 uploadDoc('proposal', f);
               }}
             />
@@ -394,16 +394,15 @@ const OpportunityDetail = ({ user }) => {
 
       <div className="form-group" style={{ gridColumn: 'span 2' }}>
         <label><strong>PO</strong></label>
-        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '12px', alignItems: 'start' }}>
           <button type="button" className="btn-small btn-primary" disabled={!opportunity.clientPOUpload} onClick={() => openDoc(opportunity.clientPOUpload)}>Open</button>
           {canUploadDocuments && (
-            <input
-              type="file"
-              accept=".pdf,image/*,.doc,.docx,.xlsx,.xls"
-              disabled={uploading.po}
-              onChange={(e) => {
-                const f = e.target.files?.[0];
-                e.target.value = '';
+            <FileUpload
+              label={null}
+              multiple={false}
+              accept=".xlsx,.xls,.doc,.docx,.pdf,image/*"
+              onFilesChange={(files) => {
+                const f = files?.[0];
                 uploadDoc('po', f);
               }}
             />
@@ -413,16 +412,15 @@ const OpportunityDetail = ({ user }) => {
 
       <div className="form-group" style={{ gridColumn: 'span 2' }}>
         <label><strong>Invoice</strong></label>
-        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '12px', alignItems: 'start' }}>
           <button type="button" className="btn-small btn-primary" disabled={!opportunity.invoiceDocumentUpload} onClick={() => openDoc(opportunity.invoiceDocumentUpload)}>Open</button>
           {canUploadDocuments && (
-            <input
-              type="file"
-              accept=".pdf,image/*,.doc,.docx,.xlsx,.xls"
-              disabled={uploading.invoice}
-              onChange={(e) => {
-                const f = e.target.files?.[0];
-                e.target.value = '';
+            <FileUpload
+              label={null}
+              multiple={false}
+              accept=".xlsx,.xls,.doc,.docx,.pdf,image/*"
+              onFilesChange={(files) => {
+                const f = files?.[0];
                 uploadDoc('invoice', f);
               }}
             />

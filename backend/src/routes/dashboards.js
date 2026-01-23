@@ -372,7 +372,7 @@ router.get('/performance/:userId', authenticate, authorize('Sales Executive', 'S
     const opps = await Opportunity.find(query).select('tov expectedCommercialValue opportunityStatus');
 
     const achieved = opps
-      .filter(o => o.opportunityStatus === 'Converted to Deal')
+      .filter(o => o.opportunityStatus === 'Converted to Deal' || o.opportunityStatus === 'Approved')
       .reduce((sum, o) => sum + (Number(o.tov || o.expectedCommercialValue || 0) || 0), 0);
 
     res.json({
@@ -978,7 +978,7 @@ router.get('/sales-executive', authenticate, authorize('Sales Executive'), async
     const revenueTarget = latestTarget ? latestTarget.amount : 0;
     const leadCapture = myClients.length;
     const opportunities = myOpportunities.length;
-    const closures = myOpportunities.filter(o => o.opportunityStatus === 'Converted to Deal').length;
+    const closures = myOpportunities.filter(o => o.opportunityStatus === 'Converted to Deal' || o.opportunityStatus === 'Approved').length;
 
     const pipeline = {
       new: myOpportunities.filter(o => o.opportunityStatus === 'New').length,
@@ -990,7 +990,7 @@ router.get('/sales-executive', authenticate, authorize('Sales Executive'), async
 
     const totalValue = myOpportunities.reduce((sum, o) => sum + (o.expectedCommercialValue || o.tov || 0), 0);
     const convertedValue = myOpportunities
-      .filter(o => o.opportunityStatus === 'Converted to Deal')
+      .filter(o => o.opportunityStatus === 'Converted to Deal' || o.opportunityStatus === 'Approved')
       .reduce((sum, o) => sum + (o.expectedCommercialValue || o.tov || 0), 0);
 
     // All opportunities (for real-time visibility across all roles)
