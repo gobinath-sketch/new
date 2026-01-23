@@ -1455,7 +1455,26 @@ const Dashboard = ({ user }) => {
                                             {['Q1', 'Q2', 'Q3', 'Q4'].map((q) => (<option key={q} value={q}>{q}</option>))}
                                         </select>
                                     )}
-                                    <input className="form-control" type="number" value={gpYear} onChange={(e) => { const v = Number(e.target.value); gpFilterRef.current = { ...gpFilterRef.current, year: v }; setGpYear(v); fetchGPReport({ year: v }); }} style={{ width: 120 }} />
+                                    <select
+                                        className="form-control"
+                                        value={gpYear}
+                                        onChange={(e) => {
+                                            const v = Number(e.target.value);
+                                            gpFilterRef.current = { ...gpFilterRef.current, year: v };
+                                            setGpYear(v);
+                                            fetchGPReport({ year: v });
+                                        }}
+                                        style={{ width: 220 }}
+                                    >
+                                        {Array.from({ length: 7 }, (_, i) => {
+                                            const startYear = new Date().getFullYear() - 4 + i;
+                                            return (
+                                                <option key={startYear} value={startYear}>
+                                                    April {startYear} - March {startYear + 1}
+                                                </option>
+                                            );
+                                        })}
+                                    </select>
                                 </div>
                             </div>
 
