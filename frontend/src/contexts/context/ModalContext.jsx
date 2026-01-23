@@ -1,6 +1,6 @@
 
 import React, { createContext, useContext, useState, useCallback } from 'react';
-import CustomModal from '../components/CustomModal';
+import CustomModal from '../../components/CustomModal.jsx';
 
 const ModalContext = createContext();
 
@@ -31,8 +31,8 @@ export const ModalProvider = ({ children }) => {
                 if (config.onCancel) config.onCancel();
                 close();
             },
-            onConfirm: async () => {
-                if (config.onConfirm) await config.onConfirm();
+            onConfirm: async (value) => {
+                if (config.onConfirm) await config.onConfirm(value);
                 close();
             }
         });
@@ -53,14 +53,17 @@ export const ModalProvider = ({ children }) => {
     }, [showModal]);
 
     // Wrapper for Alert (Replaces window.alert)
-    const alert = useCallback(({ title, message, onOk, okText, type = 'info' }) => {
+    const alert = useCallback(({ title, message, onOk, okText, type = 'info', ...rest }) => {
         showModal({
             title,
             message,
             onConfirm: onOk,
             confirmText: okText || 'OK',
-            showCancel: false,
+            showCancel: true,
+            showFooterCancel: false,
             type
+            ,
+            ...rest
         });
     }, [showModal]);
 

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import api from '../services/api';
 import './Table.css';
 import ClientCreation from './ClientCreation';
+import { useModal } from '../contexts/context/ModalContext.jsx';
 
 const ComboField = ({ label, value, onChange, options = [], required, placeholder }) => {
   const [open, setOpen] = useState(false);
@@ -65,6 +66,7 @@ const OpportunityCreation = ({ user }) => {
   const [showContingencyPopup, setShowContingencyPopup] = useState(false);
   const [clientSelectionMode, setClientSelectionMode] = useState('');
   const [selectedClientId, setSelectedClientId] = useState('');
+  const modal = useModal();
   const [formData, setFormData] = useState({
     trainingOpportunity: '',
     trainingOpportunityOther: '',
@@ -273,12 +275,22 @@ const OpportunityCreation = ({ user }) => {
     // Validation for Vouchers
     if (formData.trainingOpportunity === 'Vouchers') {
       if (!formData.examRegions || formData.examRegions.length === 0) {
-        alert('Please add at least one exam region with number of exams');
+        modal.alert({
+          title: 'Validation',
+          message: 'Please add at least one exam region with number of exams.',
+          okText: 'Close',
+          type: 'warning'
+        });
         return;
       }
       const invalidRegion = formData.examRegions.find(r => !r.region || !r.numberOfExams);
       if (invalidRegion) {
-        alert('Please fill in all exam region details (region and number of exams)');
+        modal.alert({
+          title: 'Validation',
+          message: 'Please fill in all exam region details (region and number of exams).',
+          okText: 'Close',
+          type: 'warning'
+        });
         return;
       }
     }
@@ -366,7 +378,12 @@ const OpportunityCreation = ({ user }) => {
       fetchDropdownOptions();
     } catch (error) {
       console.error('Error creating opportunity:', error);
-      alert(error.response?.data?.error || 'Error creating opportunity');
+      modal.alert({
+        title: 'Error',
+        message: error.response?.data?.error || 'Error creating opportunity',
+        okText: 'Close',
+        type: 'danger'
+      });
     }
   };
 

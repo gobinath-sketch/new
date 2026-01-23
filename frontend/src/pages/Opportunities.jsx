@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
 import api from '../services/api';
 import './Table.css';
+import { useModal } from '../contexts/context/ModalContext.jsx';
 
 const Opportunities = ({ user }) => {
   const [opportunities, setOpportunities] = useState([]);
   const [dropdownOptions, setDropdownOptions] = useState({});
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const modal = useModal();
   const [formData, setFormData] = useState({
     clientCompanyName: '',
     clientContactName: '',
@@ -131,15 +133,20 @@ const Opportunities = ({ user }) => {
         throw new Error('Invalid PDF response');
       }
     } catch (error) {
+      let message = 'Error downloading PDF. Please try again.';
       if (error.response?.status === 403) {
-        alert('Access denied. You do not have permission to download this PDF.');
+        message = 'Access denied. You do not have permission to download this PDF.';
       } else if (error.response?.status === 404) {
-        alert('Opportunity not found.');
+        message = 'Opportunity not found.';
       } else if (error.response?.status === 400) {
-        alert('Opportunity is incomplete and cannot be downloaded.');
-      } else {
-        alert('Error downloading PDF. Please try again.');
+        message = 'Opportunity is incomplete and cannot be downloaded.';
       }
+      modal.alert({
+        title: 'Download Failed',
+        message,
+        okText: 'Close',
+        type: 'danger'
+      });
       console.error('Error downloading PDF:', error);
     }
   };
@@ -288,7 +295,9 @@ const Opportunities = ({ user }) => {
               />
             </div>
           </div>
-          <button type="submit" className="btn-primary">Create Opportunity</button>
+          <div className="form-actions">
+            <button type="submit" className="btn-primary">Create Opportunity</button>
+          </div>
         </form>
       )}
 

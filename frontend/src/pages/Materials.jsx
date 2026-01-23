@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import api from '../services/api';
 import './Table.css';
+import { useModal } from '../contexts/context/ModalContext.jsx';
 
 const Materials = ({ user }) => {
   const [materials, setMaterials] = useState([]);
@@ -8,6 +9,7 @@ const Materials = ({ user }) => {
   const [dropdownOptions, setDropdownOptions] = useState({});
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const modal = useModal();
   const [formData, setFormData] = useState({
     programId: '',
     materialName: '',
@@ -167,19 +169,52 @@ const Materials = ({ user }) => {
                 <td>
                   <button 
                     onClick={() => {
-                      const details = `
-MATERIAL DETAILS
+                      modal.alert({
+                        title: 'Material Details',
+                        okText: 'Close',
+                        type: 'info',
+                        containerClassName: 'modal-wide',
+                        message: (
+                          <div className="modal-scroll-area">
+                            <h4 className="modal-section-title">Summary</h4>
+                            <div className="modal-kv-grid">
+                              <div className="modal-kv-label">Program</div>
+                              <div className="modal-kv-value">{material.programId?.programName || 'N/A'}</div>
 
-Program: ${material.programId?.programName || 'N/A'}
-Material Name: ${material.materialName}
-Quantity Required: ${material.quantityRequired}
-Material Cost: ₹${material.materialCost || 0}
-Courier Partner: ${material.courierPartner || 'N/A'}
-Material Status: ${material.materialStatus || 'Pending'}
-${material.trackingNumber ? `Tracking Number: ${material.trackingNumber}` : ''}
-Created Date: ${new Date(material.createdAt).toLocaleString()}
-                      `;
-                      alert(details);
+                              <div className="modal-kv-label">Material Name</div>
+                              <div className="modal-kv-value">{material.materialName || 'N/A'}</div>
+
+                              <div className="modal-kv-label">Quantity</div>
+                              <div className="modal-kv-value">{material.quantityRequired ?? 'N/A'}</div>
+
+                              <div className="modal-kv-label">Cost</div>
+                              <div className="modal-kv-value">₹{(material.materialCost || 0).toLocaleString()}</div>
+                            </div>
+
+                            <div style={{ height: '16px' }} />
+
+                            <h4 className="modal-section-title">Logistics</h4>
+                            <div className="modal-kv-grid">
+                              <div className="modal-kv-label">Courier Partner</div>
+                              <div className="modal-kv-value">{material.courierPartner || 'N/A'}</div>
+
+                              <div className="modal-kv-label">Material Status</div>
+                              <div className="modal-kv-value">{material.materialStatus || 'Pending'}</div>
+
+                              <div className="modal-kv-label">Tracking Number</div>
+                              <div className="modal-kv-value">{material.trackingNumber || 'N/A'}</div>
+                            </div>
+
+                            <div style={{ height: '16px' }} />
+
+                            <h4 className="modal-section-title">Audit</h4>
+                            <div className="modal-kv-grid">
+                              <div className="modal-kv-label">Created Date</div>
+                              <div className="modal-kv-value">{material.createdAt ? new Date(material.createdAt).toLocaleString() : 'N/A'}</div>
+                            </div>
+                          </div>
+                        )
+                      });
                     }}
                     className="btn-small"
                     style={{ backgroundColor: '#007bff', color: 'white' }}

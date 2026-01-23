@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import api from '../services/api';
+import { useModal } from '../contexts/context/ModalContext.jsx';
 
 const VendorForm = ({ user, onSuccess, onCancel }) => {
     const [dropdownOptions, setDropdownOptions] = useState({});
+    const modal = useModal();
     const [formData, setFormData] = useState({
         vendorType: '',
         vendorName: '',
@@ -71,13 +73,23 @@ const VendorForm = ({ user, onSuccess, onCancel }) => {
                 .filter(person => person.name || person.phone);
 
             if (contactPersons.length === 0) {
-                alert('Please add at least one contact person with name or phone number');
+                modal.alert({
+                    title: 'Validation',
+                    message: 'Please add at least one contact person with name or phone number.',
+                    okText: 'Close',
+                    type: 'warning'
+                });
                 return;
             }
 
             const phoneNumbers = contactPersons.map(p => p.phone).filter(p => p);
             if (phoneNumbers.length === 0) {
-                alert('Please add at least one contact number');
+                modal.alert({
+                    title: 'Validation',
+                    message: 'Please add at least one contact number.',
+                    okText: 'Close',
+                    type: 'warning'
+                });
                 return;
             }
 
@@ -93,7 +105,12 @@ const VendorForm = ({ user, onSuccess, onCancel }) => {
             }
         } catch (error) {
             console.error('Error creating vendor:', error);
-            alert(error.response?.data?.error || 'Error creating vendor');
+            modal.alert({
+                title: 'Error',
+                message: error.response?.data?.error || 'Error creating vendor',
+                okText: 'Close',
+                type: 'danger'
+            });
         }
     };
 

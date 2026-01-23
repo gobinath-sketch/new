@@ -230,6 +230,12 @@ const opportunitySchema = new mongoose.Schema({
       return !this.tov; // Required only if new form fields not present
     }
   },
+  proposalDocumentUpload: {
+    type: String
+  },
+  invoiceDocumentUpload: {
+    type: String
+  },
   clientPOUpload: {
     type: String // File path or URL
   },

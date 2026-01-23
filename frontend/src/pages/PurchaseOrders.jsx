@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import api from '../services/api';
 import './Table.css';
-import VendorForm from '../components/VendorForm';
+import VendorForm from '../components/VendorForm.jsx';
+import { useModal } from '../contexts/context/ModalContext.jsx';
 
 const PurchaseOrders = ({ user }) => {
   const [activeTab, setActiveTab] = useState('vendor'); // Default to vendor because that was the original page content
@@ -12,6 +13,7 @@ const PurchaseOrders = ({ user }) => {
   const [loading, setLoading] = useState(true);
   const [showPOForm, setShowPOForm] = useState(false);
   const [showVendorForm, setShowVendorForm] = useState(false);
+  const modal = useModal();
   const [formData, setFormData] = useState({
     vendorId: '',
     dealId: '',
@@ -276,18 +278,49 @@ const PurchaseOrders = ({ user }) => {
                     <td>
                       <button
                         onClick={() => {
-                          const details = `
-PURCHASE ORDER DETAILS
+                          modal.alert({
+                            title: 'Purchase Order Details',
+                            okText: 'Close',
+                            type: 'info',
+                            containerClassName: 'modal-wide',
+                            message: (
+                              <div className="modal-scroll-area">
+                                <h4 className="modal-section-title">Summary</h4>
+                                <div className="modal-kv-grid">
+                                  <div className="modal-kv-label">PO Number</div>
+                                  <div className="modal-kv-value">{po.internalPONumber || 'N/A'}</div>
 
-PO Number: ${po.internalPONumber}
-Vendor: ${po.vendorId?.vendorName || 'N/A'}
-Deal: ${po.dealId?.dealId || 'N/A'}
-Approved Cost: ₹${po.approvedCost.toLocaleString()}
-Status: ${po.status}
-Created Date: ${new Date(po.createdAt).toLocaleString()}
-${po.updatedAt ? `Last Updated: ${new Date(po.updatedAt).toLocaleString()}` : ''}
-                          `;
-                          alert(details);
+                                  <div className="modal-kv-label">Vendor</div>
+                                  <div className="modal-kv-value">{po.vendorId?.vendorName || 'N/A'}</div>
+
+                                  <div className="modal-kv-label">Deal</div>
+                                  <div className="modal-kv-value">{po.dealId?.dealId || 'N/A'}</div>
+
+                                  <div className="modal-kv-label">Status</div>
+                                  <div className="modal-kv-value">{po.status || 'N/A'}</div>
+                                </div>
+
+                                <div style={{ height: '16px' }} />
+
+                                <h4 className="modal-section-title">Financials</h4>
+                                <div className="modal-kv-grid">
+                                  <div className="modal-kv-label">Approved Cost</div>
+                                  <div className="modal-kv-value">₹{(po.approvedCost || 0).toLocaleString()}</div>
+                                </div>
+
+                                <div style={{ height: '16px' }} />
+
+                                <h4 className="modal-section-title">Audit</h4>
+                                <div className="modal-kv-grid">
+                                  <div className="modal-kv-label">Created Date</div>
+                                  <div className="modal-kv-value">{po.createdAt ? new Date(po.createdAt).toLocaleString() : 'N/A'}</div>
+
+                                  <div className="modal-kv-label">Last Updated</div>
+                                  <div className="modal-kv-value">{po.updatedAt ? new Date(po.updatedAt).toLocaleString() : 'N/A'}</div>
+                                </div>
+                              </div>
+                            )
+                          });
                         }}
                         className="btn-small"
                         style={{ backgroundColor: '#007bff', color: 'white' }}

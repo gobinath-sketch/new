@@ -1,8 +1,10 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import api from '../services/api';
 import './Table.css';
 
 const Profile = ({ user, setUser }) => {
+  const avatarInputRef = useRef(null);
+  const [avatarUrl, setAvatarUrl] = useState('');
   const [editMode, setEditMode] = useState(false);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
@@ -15,6 +17,127 @@ const Profile = ({ user, setUser }) => {
     newPassword: '',
     confirmPassword: ''
   });
+
+  const userInitials = useMemo(() => {
+    const name = (user?.name || '').trim();
+    if (!name) return 'U';
+    const parts = name.split(/\s+/).filter(Boolean);
+    const first = parts[0]?.[0] || 'U';
+    const last = parts.length > 1 ? parts[parts.length - 1]?.[0] : '';
+    return `${first}${last}`.toUpperCase();
+  }, [user?.name]);
+
+  const createdAtText = useMemo(() => {
+    if (!user?.createdAt) return 'N/A';
+    const d = new Date(user.createdAt);
+    if (Number.isNaN(d.getTime())) return 'N/A';
+    return d.toLocaleString();
+  }, [user?.createdAt]);
+
+  const updatedAtText = useMemo(() => {
+    if (!user?.updatedAt) return 'N/A';
+    const d = new Date(user.updatedAt);
+    if (Number.isNaN(d.getTime())) return 'N/A';
+    return d.toLocaleString();
+  }, [user?.updatedAt]);
+
+  useEffect(() => {
+    setAvatarUrl(user?.avatarDataUrl || '');
+  }, [user?.avatarDataUrl]);
+
+  const handlePickAvatar = () => {
+    if (avatarInputRef.current) avatarInputRef.current.click();
+  };
+
+  const handleAvatarChange = (e) => {
+    const file = e.target.files && e.target.files[0] ? e.target.files[0] : null;
+    if (!file) return;
+
+    if (!file.type?.startsWith('image/')) {
+      setMessage({ type: 'error', text: 'Please select an image file.' });
+      e.target.value = '';
+      return;
+    }
+
+    if (file.size > 50 * 1024 * 1024) {
+      setMessage({ type: 'error', text: 'Image size must be 50MB or less.' });
+      e.target.value = '';
+      return;
+    }
+
+    const compressAndUpload = async () => {
+      try {
+        setLoading(true);
+        setMessage({ type: '', text: '' });
+
+        const imgUrl = URL.createObjectURL(file);
+        const img = new Image();
+
+        const dataUrl = await new Promise((resolve, reject) => {
+          img.onload = () => {
+            try {
+              const maxDim = 512;
+              const w = img.naturalWidth || img.width;
+              const h = img.naturalHeight || img.height;
+              const scale = Math.min(1, maxDim / Math.max(w, h));
+              const targetW = Math.max(1, Math.round(w * scale));
+              const targetH = Math.max(1, Math.round(h * scale));
+
+              const canvas = document.createElement('canvas');
+              canvas.width = targetW;
+              canvas.height = targetH;
+              const ctx = canvas.getContext('2d');
+              if (!ctx) throw new Error('Canvas not supported');
+
+              ctx.drawImage(img, 0, 0, targetW, targetH);
+
+              // JPEG compression keeps the avatarDataUrl small & MongoDB-safe.
+              const out = canvas.toDataURL('image/jpeg', 0.82);
+              resolve(out);
+            } catch (err) {
+              reject(err);
+            }
+          };
+          img.onerror = () => reject(new Error('Unable to decode image'));
+          img.src = imgUrl;
+        });
+
+        URL.revokeObjectURL(imgUrl);
+
+        const response = await api.put('/auth/avatar', { avatarDataUrl: dataUrl });
+        setUser(response.data.user);
+        setAvatarUrl(response.data.user?.avatarDataUrl || '');
+        setMessage({ type: 'success', text: 'Profile photo updated.' });
+        setTimeout(() => setMessage({ type: '', text: '' }), 2500);
+      } catch (error) {
+        setMessage({ type: 'error', text: error.response?.data?.error || error.message || 'Failed to update profile photo' });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    compressAndUpload();
+    e.target.value = '';
+  };
+
+  const handleRemoveAvatar = () => {
+    const run = async () => {
+      try {
+        setLoading(true);
+        const response = await api.put('/auth/avatar', { avatarDataUrl: '' });
+        setUser(response.data.user);
+        setAvatarUrl('');
+        setMessage({ type: 'success', text: 'Profile photo removed.' });
+        setTimeout(() => setMessage({ type: '', text: '' }), 2500);
+      } catch (error) {
+        setMessage({ type: 'error', text: error.response?.data?.error || 'Failed to remove profile photo' });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    run();
+  };
 
   const handleProfileUpdate = async (e) => {
     e.preventDefault();
@@ -65,7 +188,7 @@ const Profile = ({ user, setUser }) => {
   };
 
   return (
-    <div>
+    <div className="profile-page">
       <div className="page-header">
         <h1 className="page-title">My Profile</h1>
         {!editMode && (
@@ -80,6 +203,51 @@ const Profile = ({ user, setUser }) => {
           {message.text}
         </div>
       )}
+
+      <div className="form-card">
+        <div className="profile-summary">
+          <div className="profile-summary-left">
+            <div
+              className="profile-avatar profile-avatar-clickable"
+              role="button"
+              tabIndex={0}
+              onClick={handlePickAvatar}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  handlePickAvatar();
+                }
+              }}
+            >
+              {avatarUrl ? (
+                <img src={avatarUrl} alt="Profile" className="profile-avatar-img" />
+              ) : (
+                <div className="profile-avatar-text">{userInitials}</div>
+              )}
+            </div>
+
+            <div className="profile-summary-meta">
+              <div className="profile-summary-name">{user?.name || 'User'}</div>
+              <div className="profile-summary-sub">{user?.role || ''}</div>
+              <div className="profile-summary-sub">{user?.email || ''}</div>
+            </div>
+          </div>
+
+          <div className="profile-summary-actions">
+            <input
+              ref={avatarInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleAvatarChange}
+              style={{ display: 'none' }}
+            />
+            <button type="button" className="btn-secondary" onClick={handleRemoveAvatar} disabled={!avatarUrl || loading}>
+              Remove
+            </button>
+          </div>
+        </div>
+        <div className="form-helper-text profile-summary-helper"></div>
+      </div>
 
       <div className="form-card">
         <h2>Profile Information</h2>
@@ -103,6 +271,14 @@ const Profile = ({ user, setUser }) => {
             <div className="form-group">
               <label><strong>User ID</strong></label>
               <div className="display-field">{user?.id || 'N/A'}</div>
+            </div>
+            <div className="form-group">
+              <label><strong>Created</strong></label>
+              <div className="display-field">{createdAtText}</div>
+            </div>
+            <div className="form-group">
+              <label><strong>Last Updated</strong></label>
+              <div className="display-field">{updatedAtText}</div>
             </div>
           </div>
         ) : (

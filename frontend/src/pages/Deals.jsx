@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import api from '../services/api';
 import './Table.css';
+import { useModal } from '../contexts/context/ModalContext.jsx';
 
 const Deals = ({ user }) => {
   const [deals, setDeals] = useState([]);
@@ -8,6 +9,7 @@ const Deals = ({ user }) => {
   const [showForm, setShowForm] = useState(false);
   const [opportunities, setOpportunities] = useState([]);
   const [dropdownOptions, setDropdownOptions] = useState({});
+  const modal = useModal();
   const [formData, setFormData] = useState({
     opportunityId: '',
     clientName: '',
@@ -178,22 +180,61 @@ const Deals = ({ user }) => {
                 <td>
                   <button 
                     onClick={() => {
-                      const details = `
-DEAL DETAILS
+                      modal.alert({
+                        title: 'Deal Details',
+                        okText: 'Close',
+                        type: 'info',
+                        containerClassName: 'modal-wide',
+                        message: (
+                          <div className="modal-scroll-area">
+                            <h4 className="modal-section-title">Summary</h4>
+                            <div className="modal-kv-grid">
+                              <div className="modal-kv-label">Deal ID</div>
+                              <div className="modal-kv-value">{deal.dealId || 'N/A'}</div>
 
-Deal ID: ${deal.dealId}
-Client Name: ${deal.clientName || 'N/A'}
-Adhoc ID: ${deal.opportunityId || 'N/A'}
-Total Order Value: ₹${deal.totalOrderValue?.toLocaleString() || 0}
-Total Cost: ₹${deal.totalCost?.toLocaleString() || 0}
-Gross Margin: ${deal.grossMarginPercent?.toFixed(2) || 0}%
-Gross Margin Amount: ₹${deal.grossMarginAmount?.toLocaleString() || 0}
-Approval Status: ${deal.approvalStatus || 'N/A'}
-${deal.approvedBy ? `Approved By: ${deal.approvedBy}` : ''}
-${deal.approvedAt ? `Approved At: ${new Date(deal.approvedAt).toLocaleString()}` : ''}
-Created Date: ${new Date(deal.createdAt).toLocaleString()}
-                      `;
-                      alert(details);
+                              <div className="modal-kv-label">Client</div>
+                              <div className="modal-kv-value">{deal.clientName || 'N/A'}</div>
+
+                              <div className="modal-kv-label">Adhoc ID</div>
+                              <div className="modal-kv-value">{deal.opportunityId || 'N/A'}</div>
+
+                              <div className="modal-kv-label">Approval Status</div>
+                              <div className="modal-kv-value">{deal.approvalStatus || 'N/A'}</div>
+                            </div>
+
+                            <div style={{ height: '16px' }} />
+
+                            <h4 className="modal-section-title">Financials</h4>
+                            <div className="modal-kv-grid">
+                              <div className="modal-kv-label">Total Order Value</div>
+                              <div className="modal-kv-value">₹{(deal.totalOrderValue || 0).toLocaleString()}</div>
+
+                              <div className="modal-kv-label">Total Cost</div>
+                              <div className="modal-kv-value">₹{(deal.totalCost || 0).toLocaleString()}</div>
+
+                              <div className="modal-kv-label">Gross Margin %</div>
+                              <div className="modal-kv-value">{(deal.grossMarginPercent || 0).toFixed(2)}%</div>
+
+                              <div className="modal-kv-label">Gross Margin Amount</div>
+                              <div className="modal-kv-value">₹{(deal.grossMarginAmount || 0).toLocaleString()}</div>
+                            </div>
+
+                            <div style={{ height: '16px' }} />
+
+                            <h4 className="modal-section-title">Audit</h4>
+                            <div className="modal-kv-grid">
+                              <div className="modal-kv-label">Approved By</div>
+                              <div className="modal-kv-value">{deal.approvedBy || 'N/A'}</div>
+
+                              <div className="modal-kv-label">Approved At</div>
+                              <div className="modal-kv-value">{deal.approvedAt ? new Date(deal.approvedAt).toLocaleString() : 'N/A'}</div>
+
+                              <div className="modal-kv-label">Created Date</div>
+                              <div className="modal-kv-value">{deal.createdAt ? new Date(deal.createdAt).toLocaleString() : 'N/A'}</div>
+                            </div>
+                          </div>
+                        )
+                      });
                     }}
                     className="btn-small"
                     style={{ backgroundColor: '#007bff', color: 'white' }}

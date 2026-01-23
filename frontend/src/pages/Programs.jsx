@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import api from '../services/api';
 import './Table.css';
+import { useModal } from '../contexts/context/ModalContext.jsx';
+import FileUpload from '../components/FileUpload.jsx';
 
 const Programs = ({ user }) => {
   const [programs, setPrograms] = useState([]);
@@ -11,6 +13,7 @@ const Programs = ({ user }) => {
   const [trainers, setTrainers] = useState(['']);
   const [showMarketingPopup, setShowMarketingPopup] = useState(false);
   const [showContingencyPopup, setShowContingencyPopup] = useState(false);
+  const modal = useModal();
   const [formData, setFormData] = useState({
     trainingOpportunity: '',
     trainingSector: '',
@@ -250,7 +253,12 @@ const Programs = ({ user }) => {
       fetchDropdownOptions();
     } catch (error) {
       console.error('Error creating program:', error);
-      alert(error.response?.data?.error || 'Error creating program');
+      modal.alert({
+        title: 'Error',
+        message: error.response?.data?.error || 'Error creating program',
+        okText: 'Close',
+        type: 'danger'
+      });
     }
   };
 
@@ -258,7 +266,7 @@ const Programs = ({ user }) => {
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+      <div className="page-header">
         <h1 className="page-title">Programs & Batches</h1>
         <button onClick={() => setShowForm(!showForm)} className="btn-primary">
           {showForm ? 'Cancel' : 'Add Program'}
@@ -269,7 +277,9 @@ const Programs = ({ user }) => {
         <form onSubmit={handleSubmit} className="form-card">
           <h2>Add Program</h2>
 
-          <h3 style={{ borderBottom: '1px solid #eee', paddingBottom: '10px', marginBottom: '20px', color: '#333' }}>Program Details</h3>
+          <div className="form-section">
+            <div className="form-section-title">Program Details</div>
+          </div>
           <div className="form-grid">
             {/* Adhoc ID */}
             <div className="form-group">
@@ -542,7 +552,7 @@ const Programs = ({ user }) => {
             <div className="form-group" style={{ gridColumn: 'span 2' }}>
               <label>Trainer(s)</label>
               {trainers.map((trainer, index) => (
-                <div key={index} style={{ display: 'flex', gap: '8px', marginBottom: '8px', alignItems: 'center' }}>
+                <div key={index} className="phone-input-group" style={{ marginBottom: '8px' }}>
                   <select
                     value={trainer}
                     onChange={(e) => updateTrainer(index, e.target.value)}
@@ -558,14 +568,7 @@ const Programs = ({ user }) => {
                     <button
                       type="button"
                       onClick={() => removeTrainer(index)}
-                      style={{
-                        padding: '8px 12px',
-                        backgroundColor: '#dc3545',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '4px',
-                        cursor: 'pointer'
-                      }}
+                      className="btn-small btn-danger"
                     >
                       Remove
                     </button>
@@ -575,15 +578,8 @@ const Programs = ({ user }) => {
               <button
                 type="button"
                 onClick={addTrainer}
-                style={{
-                  padding: '8px 16px',
-                  backgroundColor: '#28a745',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  marginTop: '8px'
-                }}
+                className="btn-success"
+                style={{ marginTop: '8px' }}
               >
                 + Add Trainer
               </button>
@@ -603,7 +599,9 @@ const Programs = ({ user }) => {
             </div>
           </div>
 
-          <h3 style={{ borderBottom: '1px solid #eee', paddingBottom: '10px', marginBottom: '20px', marginTop: '30px', color: '#333' }}>Expenses</h3>
+          <div className="form-section">
+            <div className="form-section-title">Expenses</div>
+          </div>
           <div className="form-grid">
             {/* Client PO Number */}
             <div className="form-group">
@@ -758,7 +756,7 @@ const Programs = ({ user }) => {
             {/* Marketing Charges */}
             <div className="form-group">
               <label>Marketing Charges</label>
-              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+              <div className="phone-input-group">
                 <input
                   type="number"
                   value={formData.marketingChargesAmount || ''}
@@ -828,7 +826,7 @@ const Programs = ({ user }) => {
             {/* Contingency */}
             <div className="form-group">
               <label>Contingency</label>
-              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+              <div className="phone-input-group">
                 <input
                   type="number"
                   value={formData.contingencyAmount || ''}
@@ -839,14 +837,7 @@ const Programs = ({ user }) => {
                 <button
                   type="button"
                   onClick={() => setShowContingencyPopup(true)}
-                  style={{
-                    padding: '8px 16px',
-                    backgroundColor: '#007bff',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '4px',
-                    cursor: 'pointer'
-                  }}
+                  className="btn-small btn-primary"
                 >
                   Set %
                 </button>
@@ -916,22 +907,23 @@ const Programs = ({ user }) => {
             </div>
           </div>
 
-          <h3 style={{ borderBottom: '1px solid #eee', paddingBottom: '10px', marginBottom: '20px', marginTop: '30px', color: '#333' }}>Attachments</h3>
+          <div className="form-section">
+            <div className="form-section-title">Attachments</div>
+          </div>
           <div className="form-grid">
             <div className="form-group">
-              <label>Attendance Upload</label>
-              <input type="file" className="file-input" multiple />
+              <FileUpload label="Attendance Upload" />
             </div>
             <div className="form-group">
-              <label>Feedback Upload</label>
-              <input type="file" className="file-input" multiple />
+              <FileUpload label="Feedback Upload" />
             </div>
             <div className="form-group">
-              <label>Assessment Upload</label>
-              <input type="file" className="file-input" multiple />
+              <FileUpload label="Assessment Upload" />
             </div>
           </div>
-          <button type="submit" className="btn-primary">Create Program</button>
+          <div className="form-actions">
+            <button type="submit" className="btn-primary">Create Program</button>
+          </div>
         </form>
       )}
 

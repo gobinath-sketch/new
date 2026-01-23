@@ -107,61 +107,34 @@ const RevenueGrowthChart = () => {
     const gapPercent = totalTarget > 0 ? (currentActual / totalTarget) * 100 : 0;
 
     return (
-        <div className="revenue-growth-chart-container" style={{
-            background: 'linear-gradient(180deg, #0b1121 0%, #162445 100%)', // Deep Navy/Blue
-            borderRadius: '16px',
-            padding: '24px',
-            boxShadow: '0 0 40px rgba(0, 0, 0, 0.6) inset, 0 5px 15px rgba(0,0,0,0.5)',
-            border: '1px solid rgba(56, 189, 248, 0.1)', // Subtle Cyan Border
-            height: '100%',
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'space-between',
-            position: 'relative',
-            fontFamily: "'Inter', sans-serif"
-        }}>
-            <div style={{ marginBottom: '20px', textAlign: 'left', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '15px' }}>
-                <h3 style={{
-                    fontSize: '15px',
-                    fontWeight: '700',
-                    color: '#38bdf8', // Light Cyan
-                    margin: '0 0 6px 0',
-                    textTransform: 'uppercase',
-                    letterSpacing: '1px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px'
-                }}>
-                    <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#38bdf8', boxShadow: '0 0 8px #38bdf8' }}></span>
-                    REVENUE ANALYTICS ({new Date().getFullYear()})
-                </h3>
-                <div style={{ fontSize: '11px', color: '#94a3b8', paddingLeft: '16px' }}>
-                    MARKET PERFORMANCE & VOLUME INDICATORS
-                </div>
+        <div className="revenue-growth-chart-container">
+            <div className="chart-header">
+                <div className="chart-title-bar">REVENUE ANALYTICS ({new Date().getFullYear()})</div>
+                <div className="chart-subtitle">Market performance & volume indicators</div>
             </div>
 
-            <div style={{ flex: 1, minHeight: '450px', width: '100%' }}>
-                <ResponsiveContainer width="100%" height={450}>
-                    <ComposedChart data={data} margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
+            <div className="chart-wrapper">
+                <ResponsiveContainer width="100%" height={320}>
+                    <ComposedChart data={data} margin={{ top: 10, right: 12, bottom: 10, left: 12 }}>
                         <defs>
                             {/* Cyan Area Gradient */}
                             <linearGradient id="cyanArea" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.4} /> {/* Cyan-500 */}
-                                <stop offset="95%" stopColor="#06b6d4" stopOpacity={0} />
+                                <stop offset="5%" stopColor="var(--color-primary)" stopOpacity={0.35} />
+                                <stop offset="95%" stopColor="var(--color-primary)" stopOpacity={0} />
                             </linearGradient>
                             {/* Volume Bar Gradient */}
                             <linearGradient id="volumeBar" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="0%" stopColor="#3b82f6" stopOpacity={0.6} /> {/* Blue-500 */}
-                                <stop offset="100%" stopColor="#3b82f6" stopOpacity={0.1} />
+                                <stop offset="0%" stopColor="var(--color-secondary)" stopOpacity={0.50} />
+                                <stop offset="100%" stopColor="var(--color-secondary)" stopOpacity={0.12} />
                             </linearGradient>
                         </defs>
 
-                        <CartesianGrid stroke="rgba(255, 255, 255, 0.08)" vertical={true} horizontal={true} />
+                        <CartesianGrid stroke="rgba(15, 23, 42, 0.08)" vertical={true} horizontal={true} />
 
                         <XAxis
                             dataKey="name"
-                            axisLine={{ stroke: 'rgba(255,255,255,0.1)' }}
-                            tick={{ fill: '#64748b', fontSize: 10, fontWeight: 600 }}
+                            axisLine={{ stroke: 'rgba(15, 23, 42, 0.12)' }}
+                            tick={{ fill: 'var(--color-text-muted)', fontSize: 10, fontWeight: 700 }}
                             dy={10}
                         />
 
@@ -171,7 +144,7 @@ const RevenueGrowthChart = () => {
                             orientation="left"
                             axisLine={false}
                             tickLine={false}
-                            tick={{ fill: '#38bdf8', fontSize: 10 }} // Cyan text for Left
+                            tick={{ fill: 'var(--color-primary)', fontSize: 10, fontWeight: 700 }}
                             tickFormatter={(val) => `₹${(val / 100000).toFixed(0)}L`}
                         />
 
@@ -181,12 +154,12 @@ const RevenueGrowthChart = () => {
                             orientation="right"
                             axisLine={false}
                             tickLine={false}
-                            tick={{ fill: '#6366f1', fontSize: 10 }} // Indigo text for Right
+                            tick={{ fill: 'var(--color-secondary)', fontSize: 10, fontWeight: 700 }}
                             tickFormatter={(val) => `₹${(val / 1000).toFixed(0)}k`}
                         />
 
                         <Tooltip
-                            contentStyle={{ backgroundColor: '#0f172a', borderColor: '#1e293b', color: '#fff' }}
+                            contentStyle={{ backgroundColor: 'var(--color-background)', borderColor: 'var(--color-border)', color: 'var(--color-text-primary)' }}
                             itemStyle={{ fontSize: '12px' }}
                             formatter={(value, name) => {
                                 if (name === 'Cumulative Growth') return [`₹${(value / 100000).toFixed(2)}L`, name];
@@ -214,7 +187,7 @@ const RevenueGrowthChart = () => {
                             type="monotone"
                             dataKey="cumulativeTarget"
                             name="Target Trend"
-                            stroke="#475569" // Slate-600
+                            stroke="rgba(15, 23, 42, 0.35)"
                             strokeWidth={1}
                             strokeDasharray="4 4"
                             dot={false}
@@ -228,41 +201,29 @@ const RevenueGrowthChart = () => {
                             type="monotone"
                             dataKey="cumulativeActual"
                             name="Cumulative Growth"
-                            stroke="#06b6d4" // Cyan-500
+                            stroke="var(--color-primary)"
                             strokeWidth={3}
                             fill="url(#cyanArea)"
                             dot={false} // NO DOTS
-                            activeDot={{ r: 6, fill: '#06b6d4', stroke: '#fff' }}
-                            style={{ filter: 'drop-shadow(0 0 10px rgba(6, 182, 212, 0.5))' }} // Strong Glow
+                            activeDot={{ r: 6, fill: 'var(--color-primary)', stroke: 'var(--color-background)' }}
+                            style={{ filter: 'drop-shadow(0 14px 26px rgba(99, 91, 255, 0.22))' }}
                             isAnimationActive={false}
                         />
                     </ComposedChart>
                 </ResponsiveContainer>
 
-                {/* Tech Stats Footer */}
-                <div style={{
-                    display: 'grid',
-                    gridTemplateColumns: '1fr 1fr 1fr',
-                    gap: '20px',
-                    marginTop: '20px',
-                    paddingTop: '20px',
-                    borderTop: '1px solid rgba(255,255,255,0.05)'
-                }}>
-                    <div>
-                        <div style={{ color: '#64748b', fontSize: '10px', textTransform: 'uppercase', marginBottom: '4px' }}>Target (Y)</div>
-                        <div style={{ color: '#e2e8f0', fontSize: '18px', fontWeight: '600' }}>₹{(totalTarget / 100000).toFixed(1)}L</div>
+                <div className="chart-legend">
+                    <div className="legend-item">
+                        <span className="legend-label">Target (Y)</span>
+                        <span className="legend-value">₹{(totalTarget / 100000).toFixed(1)}L</span>
                     </div>
-                    <div>
-                        <div style={{ color: '#38bdf8', fontSize: '10px', textTransform: 'uppercase', marginBottom: '4px' }}>Current (YTD)</div>
-                        <div style={{ color: '#38bdf8', fontSize: '18px', fontWeight: '700', textShadow: '0 0 10px rgba(56, 189, 248, 0.4)' }}>
-                            ₹{(currentActual / 100000).toFixed(1)}L
-                        </div>
+                    <div className="legend-item">
+                        <span className="legend-label">Current (YTD)</span>
+                        <span className="legend-value highlight">₹{(currentActual / 100000).toFixed(1)}L</span>
                     </div>
-                    <div>
-                        <div style={{ color: '#64748b', fontSize: '10px', textTransform: 'uppercase', marginBottom: '4px' }}>Gap</div>
-                        <div style={{ color: currentActual >= totalTarget ? '#22c55e' : '#ef4444', fontSize: '18px', fontWeight: '600' }}>
-                            {gapPercent.toFixed(1)}%
-                        </div>
+                    <div className="legend-item">
+                        <span className="legend-label">Gap</span>
+                        <span className="legend-value">{gapPercent.toFixed(1)}%</span>
                     </div>
                 </div>
             </div>

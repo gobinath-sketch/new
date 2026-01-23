@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import api from '../services/api';
 import './Table.css';
-import ClientForm from '../components/ClientForm';
+import ClientForm from '../components/ClientForm.jsx';
+import { useModal } from '../contexts/context/ModalContext.jsx';
 
 const Invoices = ({ user }) => {
   const [activeTab, setActiveTab] = useState('client');
@@ -11,6 +12,7 @@ const Invoices = ({ user }) => {
   const [loading, setLoading] = useState(true);
   const [showInvoiceForm, setShowInvoiceForm] = useState(false);
   const [showClientForm, setShowClientForm] = useState(false);
+  const modal = useModal();
   const [formData, setFormData] = useState({
     programId: '',
     clientName: '',
@@ -322,23 +324,69 @@ const Invoices = ({ user }) => {
                     <td>
                       <button
                         onClick={() => {
-                          const details = `
-INVOICE DETAILS
+                          modal.alert({
+                            title: 'Invoice Details',
+                            okText: 'Close',
+                            type: 'info',
+                            containerClassName: 'modal-wide',
+                            message: (
+                              <div className="modal-scroll-area">
+                                <h4 className="modal-section-title">Summary</h4>
+                                <div className="modal-kv-grid">
+                                  <div className="modal-kv-label">Invoice Number</div>
+                                  <div className="modal-kv-value">{invoice.clientInvoiceNumber || 'N/A'}</div>
 
-Invoice Number: ${invoice.clientInvoiceNumber}
-Client Name: ${invoice.clientName || 'N/A'}
-Deal ID: ${invoice.dealId?.dealId || 'N/A'}
-Invoice Date: ${invoice.invoiceDate ? new Date(invoice.invoiceDate).toLocaleDateString() : 'N/A'}
-Invoice Amount: ₹${invoice.invoiceAmount?.toLocaleString() || 0}
-GST Amount: ₹${invoice.gstAmount?.toLocaleString() || 0}
-Total Amount: ₹${invoice.totalAmount?.toLocaleString() || 0}
-TDS Amount: ₹${invoice.tdsAmount?.toLocaleString() || 0}
-Net Receivable: ₹${invoice.netReceivable?.toLocaleString() || 0}
-IRN Number: ${invoice.irnNumber || 'N/A'}
-Status: ${invoice.status || 'N/A'}
-Created Date: ${new Date(invoice.createdAt).toLocaleString()}
-                          `;
-                          alert(details);
+                                  <div className="modal-kv-label">Client</div>
+                                  <div className="modal-kv-value">{invoice.clientName || 'N/A'}</div>
+
+                                  <div className="modal-kv-label">Deal ID</div>
+                                  <div className="modal-kv-value">{invoice.dealId?.dealId || 'N/A'}</div>
+
+                                  <div className="modal-kv-label">Invoice Date</div>
+                                  <div className="modal-kv-value">{invoice.invoiceDate ? new Date(invoice.invoiceDate).toLocaleDateString() : 'N/A'}</div>
+
+                                  <div className="modal-kv-label">Status</div>
+                                  <div className="modal-kv-value">{invoice.status || 'N/A'}</div>
+                                </div>
+
+                                <div style={{ height: '16px' }} />
+
+                                <h4 className="modal-section-title">Amounts</h4>
+                                <div className="modal-kv-grid">
+                                  <div className="modal-kv-label">Invoice Amount</div>
+                                  <div className="modal-kv-value">₹{(invoice.invoiceAmount || 0).toLocaleString()}</div>
+
+                                  <div className="modal-kv-label">GST Amount</div>
+                                  <div className="modal-kv-value">₹{(invoice.gstAmount || 0).toLocaleString()}</div>
+
+                                  <div className="modal-kv-label">Total Amount</div>
+                                  <div className="modal-kv-value">₹{(invoice.totalAmount || 0).toLocaleString()}</div>
+
+                                  <div className="modal-kv-label">TDS Amount</div>
+                                  <div className="modal-kv-value">₹{(invoice.tdsAmount || 0).toLocaleString()}</div>
+
+                                  <div className="modal-kv-label">Net Receivable</div>
+                                  <div className="modal-kv-value">₹{(invoice.netReceivable || 0).toLocaleString()}</div>
+                                </div>
+
+                                <div style={{ height: '16px' }} />
+
+                                <h4 className="modal-section-title">Tax</h4>
+                                <div className="modal-kv-grid">
+                                  <div className="modal-kv-label">IRN Number</div>
+                                  <div className="modal-kv-value">{invoice.irnNumber || 'N/A'}</div>
+                                </div>
+
+                                <div style={{ height: '16px' }} />
+
+                                <h4 className="modal-section-title">Audit</h4>
+                                <div className="modal-kv-grid">
+                                  <div className="modal-kv-label">Created Date</div>
+                                  <div className="modal-kv-value">{invoice.createdAt ? new Date(invoice.createdAt).toLocaleString() : 'N/A'}</div>
+                                </div>
+                              </div>
+                            )
+                          });
                         }}
                         className="btn-small"
                         style={{ backgroundColor: '#007bff', color: 'white' }}

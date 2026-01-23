@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
 import api from '../services/api';
 import './Table.css';
+import { useModal } from '../contexts/context/ModalContext.jsx';
 
 const TaxEngine = ({ user }) => {
   const [taxRecords, setTaxRecords] = useState([]);
   const [loading, setLoading] = useState(true);
+  const modal = useModal();
 
   useEffect(() => {
     fetchTaxRecords();
@@ -66,8 +68,18 @@ const TaxEngine = ({ user }) => {
                   <td>
                     <button 
                       onClick={() => {
-                        const reason = prompt('Enter override reason:');
-                        if (reason) handleOverride(record._id, reason);
+                        modal.prompt({
+                          title: 'Override Reason',
+                          message: 'Enter override reason:',
+                          placeholder: 'Reason',
+                          confirmText: 'Submit',
+                          cancelText: 'Cancel',
+                          onSubmit: async (reason) => {
+                            const finalReason = (reason || '').trim();
+                            if (!finalReason) return;
+                            await handleOverride(record._id, finalReason);
+                          }
+                        });
                       }} 
                       className="btn-small"
                     >

@@ -1,28 +1,28 @@
 import { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import Login from './pages/Login';
-import Dashboard from './pages/Dashboard';
-import Vendors from './pages/Vendors';
-import Programs from './pages/Programs';
-import Materials from './pages/Materials';
-import Deals from './pages/Deals';
-import PurchaseOrders from './pages/PurchaseOrders';
-import Invoices from './pages/Invoices';
-import Receivables from './pages/Receivables';
-import Payables from './pages/Payables';
-import DealRequests from './pages/DealRequests';
-import GP from './pages/GP';
-import Governance from './pages/Governance';
-import Opportunities from './pages/Opportunities';
-import ClientCreation from './pages/ClientCreation';
-import OpportunityCreation from './pages/OpportunityCreation';
-import OpportunityDetail from './pages/OpportunityDetail';
-import ClientDetail from './pages/ClientDetail';
-import ProgramDetail from './pages/ProgramDetail';
-import Profile from './pages/Profile';
-import Settings from './pages/Settings';
-import Layout from './components/Layout';
-import { getAuthToken, getUser } from './services/auth';
+import Login from '../pages/Login.jsx';
+import Dashboard from '../pages/Dashboard.jsx';
+import Vendors from '../pages/Vendors.jsx';
+import Programs from '../pages/Programs.jsx';
+import Materials from '../pages/Materials.jsx';
+import Deals from '../pages/Deals.jsx';
+import PurchaseOrders from '../pages/PurchaseOrders.jsx';
+import Invoices from '../pages/Invoices.jsx';
+import Receivables from '../pages/Receivables.jsx';
+import Payables from '../pages/Payables.jsx';
+import DealRequests from '../pages/DealRequests.jsx';
+import GP from '../pages/GP.jsx';
+import Governance from '../pages/Governance.jsx';
+import Opportunities from '../pages/Opportunities.jsx';
+import ClientCreation from '../pages/ClientCreation.jsx';
+import OpportunityCreation from '../pages/OpportunityCreation.jsx';
+import OpportunityDetail from '../pages/OpportunityDetail.jsx';
+import ClientDetail from '../pages/ClientDetail.jsx';
+import ProgramDetail from '../pages/ProgramDetail.jsx';
+import Profile from '../pages/Profile.jsx';
+import Settings from '../pages/Settings.jsx';
+import Layout from '../components/Layout.jsx';
+import { getAuthToken, getUser } from '../services/auth.js';
 
 function App() {
   const [user, setUser] = useState(null);
@@ -57,7 +57,7 @@ function App() {
         <Route path="/" element={user ? <Layout user={user} setUser={setUser}><Dashboard user={user} /></Layout> : <Navigate to="/login" />} />
         <Route path="/vendors" element={user ? <Layout user={user} setUser={setUser}><Vendors user={user} /></Layout> : <Navigate to="/login" />} />
         <Route path="/programs" element={user ? <Layout user={user} setUser={setUser}><Programs user={user} /></Layout> : <Navigate to="/login" />} />
-        <Route path="/programs/:id" element={user ? <Layout user={user} setUser={setUser}><ProgramDetail user={user} /></Layout> : <Navigate to="/login" />} />
+        <Route path="/programs/:id" element={user ? <Layout user={user} setUser={setUser}><ProgramDetail user={user} setUser={setUser} /></Layout> : <Navigate to="/login" />} />
         <Route path="/materials" element={user ? <Layout user={user} setUser={setUser}><Materials user={user} /></Layout> : <Navigate to="/login" />} />
         <Route path="/deals" element={user ? <Layout user={user} setUser={setUser}><Deals user={user} /></Layout> : <Navigate to="/login" />} />
         <Route path="/purchase-orders" element={user ? <Layout user={user} setUser={setUser}><PurchaseOrders user={user} /></Layout> : <Navigate to="/login" />} />
@@ -73,7 +73,7 @@ function App() {
         <Route path="/gp" element={user ? <Layout user={user} setUser={setUser}><GP user={user} /></Layout> : <Navigate to="/login" />} />
         <Route path="/governance" element={user ? <Layout user={user} setUser={setUser}><Governance user={user} /></Layout> : <Navigate to="/login" />} />
         <Route path="/profile" element={user ? <Layout user={user} setUser={setUser}><Profile user={user} setUser={setUser} /></Layout> : <Navigate to="/login" />} />
-        <Route path="/settings" element={user ? <Layout user={user} setUser={setUser}><Settings user={user} /></Layout> : <Navigate to="/login" />} />
+        <Route path="/settings" element={user ? <Layout user={user} setUser={setUser}><Settings user={user} setUser={setUser} /></Layout> : <Navigate to="/login" />} />
       </Routes>
     </BrowserRouter>
   );

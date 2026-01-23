@@ -27,6 +27,38 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  avatarDataUrl: {
+    type: String,
+    default: ''
+  },
+  settings: {
+    emailNotifications: { type: Boolean, default: true },
+    lowGPAlerts: { type: Boolean, default: true },
+    dashboardRefresh: { type: Number, default: 5 },
+    theme: { type: String, default: 'light' },
+    dateFormat: { type: String, default: 'DD/MM/YYYY' },
+    timeZone: { type: String, default: 'Asia/Kolkata' },
+    autoSave: { type: Boolean, default: true },
+    itemsPerPage: { type: Number, default: 10 },
+    sidebarCompact: { type: Boolean, default: false },
+    denseTables: { type: Boolean, default: false },
+    reduceMotion: { type: Boolean, default: false }
+  },
+  downloads: [
+    {
+      title: { type: String, default: '' },
+      type: { type: String, default: '' },
+      contentHtml: { type: String, default: '' },
+      createdAt: { type: Date, default: Date.now }
+    }
+  ],
+  targets: [
+    {
+      year: { type: Number, required: true },
+      period: { type: String, required: true },
+      amount: { type: Number, required: true }
+    }
+  ],
   createdAt: {
     type: Date,
     default: Date.now

@@ -2,7 +2,7 @@
 import React from 'react';
 import './CustomModal.css';
 
-const CustomModal = ({ isOpen, type, title, message, onConfirm, onCancel, confirmText, cancelText, showCancel = true, showInput = false, inputPlaceholder = '', inputType = 'text' }) => {
+const CustomModal = ({ isOpen, type, title, message, onConfirm, onCancel, confirmText, cancelText, showCancel = true, showFooterCancel = true, showConfirm = true, showInput = false, inputPlaceholder = '', inputType = 'text', containerClassName = '' }) => {
     const [inputValue, setInputValue] = React.useState('');
 
     React.useEffect(() => {
@@ -20,7 +20,7 @@ const CustomModal = ({ isOpen, type, title, message, onConfirm, onCancel, confir
 
     return (
         <div className="modal-overlay">
-            <div className="modal-container" role="dialog" aria-modal="true">
+            <div className={`modal-container ${containerClassName}`.trim()} role="dialog" aria-modal="true">
                 <div className="modal-header">
                     <h3 className="modal-title">
                         {title}
@@ -57,18 +57,20 @@ const CustomModal = ({ isOpen, type, title, message, onConfirm, onCancel, confir
                 </div>
 
                 <div className="modal-footer">
-                    {showCancel && (
+                    {showCancel && showFooterCancel && (
                         <button className="modal-btn modal-btn-cancel" onClick={onCancel}>
                             {cancelText || 'Cancel'}
                         </button>
                     )}
-                    <button
-                        className={`modal-btn ${isDanger ? 'modal-btn-danger' : 'modal-btn-confirm'}`}
-                        onClick={handleConfirm}
-                        disabled={showInput && !inputValue.trim()}
-                    >
-                        {confirmText || 'Confirm'}
-                    </button>
+                    {showConfirm && (
+                        <button
+                            className={`modal-btn ${isDanger ? 'modal-btn-danger' : 'modal-btn-confirm'}`}
+                            onClick={handleConfirm}
+                            disabled={showInput && !inputValue.trim()}
+                        >
+                            {confirmText || 'Confirm'}
+                        </button>
+                    )}
                 </div>
             </div>
         </div>

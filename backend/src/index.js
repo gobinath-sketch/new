@@ -19,6 +19,8 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
+
 // Connect to MongoDB
 mongoose.connect(process.env.MONGODB_URI, {
   dbName: 'GKT-ERP'
@@ -55,6 +57,8 @@ import opportunityRoutes from './routes/opportunities.js';
 import clientRoutes from './routes/clients.js';
 import revenueTargetRoutes from './routes/revenueTargets.js'; // Imported
 import notificationsRoutes from './routes/notifications.js';
+import targetsRoutes from './routes/targets.js';
+import reportsRoutes from './routes/reports.js';
 
 // Health check
 app.get('/api/health', (req, res) => {
@@ -85,6 +89,8 @@ app.use('/api/purchase-offers', purchaseOfferRoutes);
 app.use('/api/bocs', bocRoutes);
 app.use('/api/revenue-targets', revenueTargetRoutes);
 app.use('/api/notifications', notificationsRoutes);
+app.use('/api/targets', targetsRoutes);
+app.use('/api/reports', reportsRoutes);
 
 const PORT = process.env.PORT || 5000;
 

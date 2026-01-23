@@ -29,7 +29,7 @@ const SalesPipelineChart = ({ pipelineData }) => {
   const chartData = [
     {
       stage: 'All',
-      percentage: 100,
+      percentage: total > 0 ? 100 : 0,
       value: total,
       label: 'ALL OPPORTUNITIES'
     },
@@ -62,18 +62,18 @@ const SalesPipelineChart = ({ pipelineData }) => {
           cx={cx}
           cy={cy}
           r={6}
-          fill="#ffffff"
-          stroke="#ffffff"
+          fill="var(--color-background)"
+          stroke="var(--color-primary)"
           strokeWidth={2}
           className="recharts-dot"
-          style={{ filter: 'drop-shadow(0 0 6px rgba(255, 255, 255, 0.5))' }}
+          style={{ filter: 'drop-shadow(0 10px 18px rgba(99, 91, 255, 0.18))' }}
         />
         {/* Percentage label above point */}
         <text
           x={cx}
           y={cy - 20}
           textAnchor="middle"
-          fill="#ffffff"
+          fill="var(--color-text-primary)"
           fontSize={14}
           fontWeight={700}
           className="data-label"
@@ -83,9 +83,9 @@ const SalesPipelineChart = ({ pipelineData }) => {
         {/* Value label below point */}
         <text
           x={cx}
-          y={cy + 30}
+          y={cy + 20}
           textAnchor="middle"
-          fill="rgba(255, 255, 255, 0.7)"
+          fill="var(--color-text-muted)"
           fontSize={11}
           fontWeight={500}
           className="value-label"
@@ -103,9 +103,9 @@ const SalesPipelineChart = ({ pipelineData }) => {
     return (
       <text
         x={x}
-        y={y + 35}
+        y={y + 18}
         textAnchor="middle"
-        fill="rgba(255, 255, 255, 0.9)"
+        fill="var(--color-text-secondary)"
         fontSize={11}
         fontWeight={600}
         className="axis-label-x"
@@ -122,7 +122,7 @@ const SalesPipelineChart = ({ pipelineData }) => {
         x={x}
         y={y}
         textAnchor="end"
-        fill="rgba(255, 255, 255, 0.8)"
+        fill="var(--color-text-muted)"
         fontSize={11}
         fontWeight={500}
         className="axis-label-y"
@@ -140,30 +140,30 @@ const SalesPipelineChart = ({ pipelineData }) => {
       </div>
 
       <div className="chart-wrapper">
-        <ResponsiveContainer width="100%" height={450}>
+        <ResponsiveContainer width="100%" height={320}>
           <AreaChart
             data={chartData}
             margin={{
-              top: 40,
-              right: 40,
-              bottom: 60,
-              left: 40
+              top: 18,
+              right: 18,
+              bottom: 18,
+              left: 18
             }}
             className="pipeline-line-chart"
           >
             <defs>
               <linearGradient id="colorPnL" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
-                <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                <stop offset="5%" stopColor="var(--color-primary)" stopOpacity={0.20} />
+                <stop offset="95%" stopColor="var(--color-primary)" stopOpacity={0} />
               </linearGradient>
               <linearGradient id="strokeGradient" x1="0" y1="0" x2="1" y2="0">
-                <stop offset="0%" stopColor="#34d399" stopOpacity={1} />
-                <stop offset="100%" stopColor="#10b981" stopOpacity={1} />
+                <stop offset="0%" stopColor="var(--color-secondary)" stopOpacity={1} />
+                <stop offset="100%" stopColor="var(--color-primary)" stopOpacity={1} />
               </linearGradient>
             </defs>
             <CartesianGrid
               strokeDasharray="3 3"
-              stroke="rgba(255, 255, 255, 0.05)"
+              stroke="rgba(15, 23, 42, 0.08)"
               horizontal={true}
               vertical={false}
               className="chart-grid"
@@ -172,9 +172,9 @@ const SalesPipelineChart = ({ pipelineData }) => {
               dataKey="label"
               axisLine={false}
               tickLine={false}
-              stroke="rgba(255, 255, 255, 0.6)"
+              stroke="rgba(15, 23, 42, 0.18)"
               tick={<CustomLabel />}
-              height={80}
+              height={44}
               interval={0}
             />
             <YAxis
@@ -182,21 +182,21 @@ const SalesPipelineChart = ({ pipelineData }) => {
               ticks={[0, 20, 40, 60, 80, 100]}
               axisLine={false}
               tickLine={false}
-              stroke="rgba(255, 255, 255, 0.6)"
+              stroke="rgba(15, 23, 42, 0.18)"
               tick={<CustomYAxisTick />}
               width={60}
             />
             <Tooltip
               contentStyle={{
-                backgroundColor: 'rgba(15, 23, 42, 0.95)',
-                border: '1px solid rgba(16, 185, 129, 0.3)',
+                backgroundColor: 'var(--color-background)',
+                border: '1px solid var(--color-border)',
                 borderRadius: '8px',
-                color: '#ffffff',
+                color: 'var(--color-text-primary)',
                 padding: '12px 16px',
-                boxShadow: '0 4px 20px rgba(0, 0, 0, 0.5)'
+                boxShadow: '0 18px 40px rgba(15, 23, 42, 0.12)'
               }}
               labelStyle={{
-                color: '#34d399',
+                color: 'var(--color-primary)',
                 fontWeight: 600,
                 marginBottom: '8px',
                 textTransform: 'uppercase',
@@ -204,12 +204,12 @@ const SalesPipelineChart = ({ pipelineData }) => {
                 letterSpacing: '1px'
               }}
               itemStyle={{
-                color: '#ffffff',
+                color: 'var(--color-text-primary)',
                 fontSize: '14px',
                 fontWeight: 500
               }}
               match={false}
-              cursor={{ stroke: 'rgba(52, 211, 153, 0.3)', strokeWidth: 1, strokeDasharray: '5 5' }}
+              cursor={{ stroke: 'rgba(99, 91, 255, 0.22)', strokeWidth: 1, strokeDasharray: '5 5' }}
               formatter={(value, name) => {
                 if (name === 'percentage') {
                   return [`${value}%`, 'Conversion Rate'];
@@ -225,7 +225,7 @@ const SalesPipelineChart = ({ pipelineData }) => {
               fill="url(#colorPnL)"
               fillOpacity={1}
               dot={<CustomDot />}
-              activeDot={{ r: 8, fill: '#10b981', stroke: '#fff', strokeWidth: 2 }}
+              activeDot={{ r: 8, fill: 'var(--color-primary)', stroke: 'var(--color-background)', strokeWidth: 2 }}
               className="pipeline-line"
               isAnimationActive={false}
             />

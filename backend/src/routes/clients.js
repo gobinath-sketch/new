@@ -5,7 +5,7 @@ import { AuditTrail } from '../models/Governance.js';
 
 const router = express.Router();
 
-router.get('/', authenticate, authorize('Sales Executive', 'Sales Manager', 'Director'), async (req, res) => {
+router.get('/', authenticate, authorize('Sales Executive', 'Sales Manager', 'Director', 'Business Head', 'Finance Manager', 'Operations Manager'), async (req, res) => {
   try {
     let filter = {};
 

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import api from '../services/api';
 import './Table.css';
-import ClientForm from '../components/ClientForm';
+import ClientForm from '../components/ClientForm.jsx';
 
 const ClientCreation = ({ user, embedded = false, onClientCreated }) => {
     const [clients, setClients] = useState([]);

@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import api from '../services/api';
 import './Table.css';
 
-const Settings = ({ user }) => {
-  const [settings, setSettings] = useState({
+const Settings = ({ user, setUser }) => {
+  const initialSettings = useMemo(() => ({
     emailNotifications: true,
     lowGPAlerts: true,
     dashboardRefresh: 5,
@@ -10,63 +11,83 @@ const Settings = ({ user }) => {
     dateFormat: 'DD/MM/YYYY',
     timeZone: 'Asia/Kolkata',
     autoSave: true,
-    itemsPerPage: 10
+    itemsPerPage: 10,
+    sidebarCompact: false,
+    denseTables: false,
+    reduceMotion: false
+  }), []);
+
+  const [settings, setSettings] = useState({
+    ...initialSettings,
+    ...(user?.settings || {})
   });
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
 
   useEffect(() => {
-    // Load saved settings from localStorage
-    const savedSettings = localStorage.getItem('userSettings');
-    if (savedSettings) {
-      try {
-        setSettings({ ...settings, ...JSON.parse(savedSettings) });
-      } catch (error) {
-        console.error('Error loading settings:', error);
+    setSettings({ ...initialSettings, ...(user?.settings || {}) });
+  }, [initialSettings, user?.settings]);
+
+  useEffect(() => {
+    const theme = settings.theme;
+    const resolved = theme === 'auto'
+      ? (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+      : theme;
+    document.documentElement.setAttribute('data-theme', resolved);
+  }, [settings.theme]);
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-sidebar', settings.sidebarCompact ? 'compact' : 'default');
+  }, [settings.sidebarCompact]);
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-density', settings.denseTables ? 'dense' : 'default');
+  }, [settings.denseTables]);
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-motion', settings.reduceMotion ? 'reduce' : 'default');
+  }, [settings.reduceMotion]);
+
+  const persistSettings = useCallback(async (next, { silent } = { silent: false }) => {
+    try {
+      setLoading(true);
+      setMessage({ type: '', text: '' });
+      const response = await api.put('/auth/settings', next);
+      if (setUser) setUser(response.data.user);
+      window.dispatchEvent(new CustomEvent('userSettingsUpdated', { detail: { userId: user?.id || null } }));
+      if (!silent) {
+        setMessage({ type: 'success', text: 'Settings saved successfully!' });
+        setTimeout(() => setMessage({ type: '', text: '' }), 3000);
       }
+      return response.data.settings;
+    } catch (error) {
+      setMessage({ type: 'error', text: error.response?.data?.error || 'Failed to save settings' });
+      return null;
+    } finally {
+      setLoading(false);
     }
-  }, []);
+  }, [setUser, user?.id]);
 
   const handleSettingChange = (key, value) => {
     const updatedSettings = { ...settings, [key]: value };
     setSettings(updatedSettings);
-    // Save to localStorage immediately
-    localStorage.setItem('userSettings', JSON.stringify(updatedSettings));
+    if (updatedSettings.autoSave) {
+      persistSettings(updatedSettings, { silent: true });
+    }
   };
 
   const handleSave = () => {
-    setLoading(true);
-    setMessage({ type: '', text: '' });
-
-    // Save settings to localStorage
-    localStorage.setItem('userSettings', JSON.stringify(settings));
-
-    setTimeout(() => {
-      setMessage({ type: 'success', text: 'Settings saved successfully!' });
-      setLoading(false);
-      setTimeout(() => setMessage({ type: '', text: '' }), 3000);
-    }, 500);
+    persistSettings(settings, { silent: false });
   };
 
   const handleReset = () => {
-    const defaultSettings = {
-      emailNotifications: true,
-      lowGPAlerts: true,
-      dashboardRefresh: 5,
-      theme: 'light',
-      dateFormat: 'DD/MM/YYYY',
-      timeZone: 'Asia/Kolkata',
-      autoSave: true,
-      itemsPerPage: 10
-    };
-    setSettings(defaultSettings);
-    localStorage.setItem('userSettings', JSON.stringify(defaultSettings));
-    setMessage({ type: 'success', text: 'Settings reset to default values!' });
-    setTimeout(() => setMessage({ type: '', text: '' }), 3000);
+    const next = { ...initialSettings };
+    setSettings(next);
+    persistSettings(next, { silent: false });
   };
 
   return (
-    <div>
+    <div className="settings-page">
       <div className="page-header">
         <h1 className="page-title">Settings</h1>
       </div>
@@ -80,7 +101,7 @@ const Settings = ({ user }) => {
       <div className="form-card">
         <h2>Notification Settings</h2>
         <div className="form-grid">
-          <div className="form-group" style={{ gridColumn: 'span 2' }}>
+          <div className="form-group">
             <div className="settings-item">
               <div className="settings-item-content">
                 <label className="settings-item-label">Email Notifications</label>
@@ -97,7 +118,7 @@ const Settings = ({ user }) => {
             </div>
           </div>
 
-          <div className="form-group" style={{ gridColumn: 'span 2' }}>
+          <div className="form-group">
             <div className="settings-item">
               <div className="settings-item-content">
                 <label className="settings-item-label">Low GP Alerts</label>
@@ -186,7 +207,7 @@ const Settings = ({ user }) => {
               <option value="Europe/London">Europe/London (GMT)</option>
             </select>
           </div>
-          <div className="form-group" style={{ gridColumn: 'span 2' }}>
+          <div className="form-group">
             <div className="settings-item">
               <div className="settings-item-content">
                 <label className="settings-item-label">Auto-Save Forms</label>
@@ -197,6 +218,62 @@ const Settings = ({ user }) => {
                   type="checkbox"
                   checked={settings.autoSave}
                   onChange={(e) => handleSettingChange('autoSave', e.target.checked)}
+                />
+                <span className="toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="form-card">
+        <h2>Interface</h2>
+        <div className="form-grid">
+          <div className="form-group">
+            <div className="settings-item">
+              <div className="settings-item-content">
+                <label className="settings-item-label">Compact Sidebar</label>
+                <p className="settings-item-description">Reduce sidebar spacing for more visible items</p>
+              </div>
+              <label className="toggle-switch">
+                <input
+                  type="checkbox"
+                  checked={settings.sidebarCompact}
+                  onChange={(e) => handleSettingChange('sidebarCompact', e.target.checked)}
+                />
+                <span className="toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+
+          <div className="form-group">
+            <div className="settings-item">
+              <div className="settings-item-content">
+                <label className="settings-item-label">Dense Tables</label>
+                <p className="settings-item-description">Tighter table row spacing across list pages</p>
+              </div>
+              <label className="toggle-switch">
+                <input
+                  type="checkbox"
+                  checked={settings.denseTables}
+                  onChange={(e) => handleSettingChange('denseTables', e.target.checked)}
+                />
+                <span className="toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+
+          <div className="form-group">
+            <div className="settings-item">
+              <div className="settings-item-content">
+                <label className="settings-item-label">Reduce Motion</label>
+                <p className="settings-item-description">Minimize animations and transitions</p>
+              </div>
+              <label className="toggle-switch">
+                <input
+                  type="checkbox"
+                  checked={settings.reduceMotion}
+                  onChange={(e) => handleSettingChange('reduceMotion', e.target.checked)}
                 />
                 <span className="toggle-slider"></span>
               </label>

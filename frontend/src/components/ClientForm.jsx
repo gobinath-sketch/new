@@ -1,8 +1,11 @@
 import { useState, useEffect } from 'react';
 import api from '../services/api';
+import { useModal } from '../contexts/context/ModalContext.jsx';
+import FileUpload from './FileUpload.jsx';
 
 const ClientForm = ({ user, onSuccess, onCancel }) => {
     const [dropdownOptions, setDropdownOptions] = useState({});
+    const modal = useModal();
     const [formData, setFormData] = useState({
         clientName: '',
         trainingSector: '',
@@ -46,15 +49,22 @@ const ClientForm = ({ user, onSuccess, onCancel }) => {
 
     const removeContactPerson = (index) => {
         if (index === 0) return; // Cannot remove primary contact
-        if (window.confirm('Are you sure you want to remove this contact person?')) {
-            const newContacts = contactPersons.filter((_, i) => i !== index);
-            setContactPersons(newContacts);
-            if (editingContactIndex === index) {
-                setEditingContactIndex(null);
-            } else if (editingContactIndex > index) {
-                setEditingContactIndex(editingContactIndex - 1);
+        modal.confirm({
+            title: 'Remove Contact Person',
+            message: 'Are you sure you want to remove this contact person?',
+            confirmText: 'Remove',
+            cancelText: 'Cancel',
+            type: 'warning',
+            onConfirm: async () => {
+                const newContacts = contactPersons.filter((_, i) => i !== index);
+                setContactPersons(newContacts);
+                if (editingContactIndex === index) {
+                    setEditingContactIndex(null);
+                } else if (editingContactIndex > index) {
+                    setEditingContactIndex(editingContactIndex - 1);
+                }
             }
-        }
+        });
     };
 
     const updateContactPerson = (index, field, value) => {
@@ -90,7 +100,12 @@ const ClientForm = ({ user, onSuccess, onCancel }) => {
     const saveContact = (index) => {
         const contact = contactPersons[index];
         if (!contact.name.trim() || !contact.phoneNumbers.some(p => p.trim())) {
-            alert('Contact must have a name and at least one phone number');
+            modal.alert({
+                title: 'Validation',
+                message: 'Contact must have a name and at least one phone number.',
+                okText: 'Close',
+                type: 'warning'
+            });
             return;
         }
         setEditingContactIndex(null);
@@ -111,7 +126,12 @@ const ClientForm = ({ user, onSuccess, onCancel }) => {
             // Validate primary contact
             const primaryContact = contactPersons[0];
             if (!primaryContact.name.trim() || !primaryContact.phoneNumbers.some(p => p.trim())) {
-                alert('Primary contact must have a name and at least one phone number');
+                modal.alert({
+                    title: 'Validation',
+                    message: 'Primary contact must have a name and at least one phone number.',
+                    okText: 'Close',
+                    type: 'warning'
+                });
                 return;
             }
 
@@ -122,7 +142,12 @@ const ClientForm = ({ user, onSuccess, onCancel }) => {
             })).filter(contact => contact.name.trim() || contact.phoneNumbers.length > 0);
 
             if (processedContacts.length === 0) {
-                alert('Please add at least one contact person');
+                modal.alert({
+                    title: 'Validation',
+                    message: 'Please add at least one contact person.',
+                    okText: 'Close',
+                    type: 'warning'
+                });
                 return;
             }
 
@@ -141,7 +166,12 @@ const ClientForm = ({ user, onSuccess, onCancel }) => {
             }
         } catch (error) {
             console.error('Error creating client:', error);
-            alert(error.response?.data?.error || 'Error creating client');
+            modal.alert({
+                title: 'Error',
+                message: error.response?.data?.error || 'Error creating client',
+                okText: 'Close',
+                type: 'danger'
+            });
         }
     };
 
@@ -273,7 +303,7 @@ const ClientForm = ({ user, onSuccess, onCancel }) => {
                     <div className="form-group" style={{ marginTop: '20px', borderTop: '1px solid #eee', paddingTop: '20px' }}>
                         <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500' }}>SOW / Agreement</label>
                         <div style={{ border: '1px dashed #d1d5db', padding: '20px', borderRadius: '6px', textAlign: 'center', background: '#f9fafb' }}>
-                            <input type="file" multiple style={{ display: 'block', width: '100%' }} />
+                            <FileUpload label="SOW / Agreement" />
                             <p style={{ fontSize: '13px', color: '#6b7280', marginTop: '8px' }}>
                                 Upload SOW or Agreement documents (Multiple files allowed)
                             </p>

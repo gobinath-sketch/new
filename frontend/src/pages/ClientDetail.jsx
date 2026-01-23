@@ -2,12 +2,14 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import './Table.css';
+import { useModal } from '../contexts/context/ModalContext.jsx';
 
 const ClientDetail = ({ user }) => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [client, setClient] = useState(null);
   const [loading, setLoading] = useState(true);
+  const modal = useModal();
 
   useEffect(() => {
     const fetchClient = async () => {
@@ -16,7 +18,12 @@ const ClientDetail = ({ user }) => {
         setClient(response.data);
       } catch (error) {
         console.error('Error fetching client:', error);
-        alert('Error loading client details');
+        modal.alert({
+          title: 'Error',
+          message: 'Error loading client details',
+          okText: 'Close',
+          type: 'danger'
+        });
       } finally {
         setLoading(false);
       }

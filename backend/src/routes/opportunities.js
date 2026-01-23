@@ -4,8 +4,31 @@ import Deal from '../models/Deal.js';
 import { authenticate, authorize } from '../middleware/auth.js';
 import { generateOpportunityId } from '../utils/generators.js';
 import { AuditTrail } from '../models/Governance.js';
+import multer from 'multer';
+import path from 'path';
+import fs from 'fs';
+import { fileURLToPath } from 'url';
 
 const router = express.Router();
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const uploadsDir = path.join(__dirname, '..', '..', 'uploads', 'opportunities');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, uploadsDir),
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname || '') || '';
+    const safeExt = ext.length > 12 ? '' : ext;
+    cb(null, `opp-${req.params.id}-${Date.now()}${safeExt}`);
+  }
+});
+
+const upload = multer({ storage });
 
 // Get all opportunities (All roles can view all opportunities)
 router.get('/', authenticate, authorize('Sales Executive', 'Sales Manager', 'Business Head', 'Director', 'Operations Manager', 'Finance Manager'), async (req, res) => {
@@ -24,6 +47,63 @@ router.get('/', authenticate, authorize('Sales Executive', 'Sales Manager', 'Bus
     res.json(opportunities);
   } catch (error) {
     res.status(500).json({ error: error.message });
+  }
+});
+
+router.post('/:id/upload/proposal', authenticate, authorize('Sales Executive', 'Sales Manager', 'Operations Manager', 'Finance Manager', 'Business Head', 'Director'), upload.single('file'), async (req, res) => {
+  try {
+    const opportunity = await Opportunity.findById(req.params.id);
+    if (!opportunity) return res.status(404).json({ error: 'Opportunity not found' });
+
+    if (!req.file) return res.status(400).json({ error: 'File is required' });
+
+    opportunity.proposalDocumentUpload = `/uploads/opportunities/${req.file.filename}`;
+    await opportunity.save();
+
+    res.json({
+      message: 'Uploaded',
+      proposalDocumentUpload: opportunity.proposalDocumentUpload
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message || 'Failed to upload' });
+  }
+});
+
+router.post('/:id/upload/po', authenticate, authorize('Sales Executive', 'Sales Manager', 'Operations Manager', 'Finance Manager', 'Business Head', 'Director'), upload.single('file'), async (req, res) => {
+  try {
+    const opportunity = await Opportunity.findById(req.params.id);
+    if (!opportunity) return res.status(404).json({ error: 'Opportunity not found' });
+
+    if (!req.file) return res.status(400).json({ error: 'File is required' });
+
+    opportunity.clientPOUpload = `/uploads/opportunities/${req.file.filename}`;
+    await opportunity.save();
+
+    res.json({
+      message: 'Uploaded',
+      clientPOUpload: opportunity.clientPOUpload
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message || 'Failed to upload' });
+  }
+});
+
+router.post('/:id/upload/invoice', authenticate, authorize('Sales Executive', 'Sales Manager', 'Operations Manager', 'Finance Manager', 'Business Head', 'Director'), upload.single('file'), async (req, res) => {
+  try {
+    const opportunity = await Opportunity.findById(req.params.id);
+    if (!opportunity) return res.status(404).json({ error: 'Opportunity not found' });
+
+    if (!req.file) return res.status(400).json({ error: 'File is required' });
+
+    opportunity.invoiceDocumentUpload = `/uploads/opportunities/${req.file.filename}`;
+    await opportunity.save();
+
+    res.json({
+      message: 'Uploaded',
+      invoiceDocumentUpload: opportunity.invoiceDocumentUpload
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message || 'Failed to upload' });
   }
 });
 
