@@ -5,6 +5,7 @@ import SalesPipelineChart from '../components/SalesPipelineChart.jsx';
 import RevenueGrowthChart from '../components/RevenueGrowthChart.jsx';
 import NotificationBell from '../components/NotificationBell.jsx';
 import DashboardCard from '../components/DashboardCard.jsx';
+import CurrencyToggle from '../components/CurrencyToggle.jsx';
 import { useModal } from '../contexts/context/ModalContext.jsx';
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, BarChart, Bar } from 'recharts';
 
@@ -1313,17 +1314,26 @@ const Dashboard = ({ user }) => {
                         <h2 className="section-title se-title">Sales Executive Overview</h2>
                         <div className="se-header-actions">
                             <div className="se-currency-toggle">
-                                <button type="button" className={currency === 'INR' ? 'btn-small btn-primary' : 'btn-small'} onClick={() => setCurrency('INR')}>INR</button>
-                                <button type="button" className={currency === 'USD' ? 'btn-small btn-primary' : 'btn-small'} onClick={() => setCurrency('USD')}>USD</button>
+                                <CurrencyToggle
+                                    checked={currency === 'INR'}
+                                    onChange={(e) => setCurrency(e.target.checked ? 'INR' : 'USD')}
+                                />
                             </div>
                         </div>
                     </div>
 
+                    <div className="dashboard-grid" style={{ marginBottom: '20px' }}>
+                        <DashboardCard title="Revenue Target" value={`₹${(data?.revenueTarget || 0).toLocaleString()}`} />
+                        <DashboardCard title={user.role === 'Sales Manager' ? "Team Pipeline" : "Lead Capture"} count={(user.role === 'Sales Manager' ? data?.totalValue : data?.leadCapture) || 0} />
+                        <DashboardCard title="Opportunities" count={(user.role === 'Sales Manager' ? data?.pipeline?.new : data?.opportunities) || 0} />
+                        <DashboardCard title="Closures" count={(user.role === 'Sales Manager' ? data?.pipeline?.converted : data?.closures) || 0} />
+                    </div>
+
                     <div className="se-kpi-grid">
                         <DashboardCard title="Clients" value={`${(clientHealth.active || 0) + (clientHealth.mid || 0) + (clientHealth.inactive || 0)}`} />
-                        <DashboardCard title="Active" count={clientHealth.active || 0} />
-                        <DashboardCard title="Mid" count={clientHealth.mid || 0} />
-                        <DashboardCard title="Inactive" count={clientHealth.inactive || 0} />
+                        <DashboardCard title="Active clients" count={clientHealth.active || 0} />
+                        <DashboardCard title="Moderate clients" count={clientHealth.mid || 0} />
+                        <DashboardCard title="Inactive clients" count={clientHealth.inactive || 0} />
                     </div>
 
                     <div className="se-panels-grid">
@@ -1358,6 +1368,25 @@ const Dashboard = ({ user }) => {
                                             : `Lagging by ${formatMoney(Math.abs(performanceDiff))}`)
                                         : 'No target set'}
                                 </div>
+                            </div>
+                        </div>
+
+                        <div className="form-card se-panel">
+                            <div className="page-header se-panel-header">
+                                <h2 className="se-panel-title">Monthly Trends</h2>
+                                <div className="se-panel-subtitle">Opportunities + Revenue</div>
+                            </div>
+                            <div className="se-chart-slot">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <AreaChart data={Array.isArray(monthlyTrends) ? monthlyTrends : []} margin={{ top: 10, right: 18, left: 0, bottom: 0 }}>
+                                        <CartesianGrid stroke="rgba(15,23,42,0.08)" strokeDasharray="3 3" />
+                                        <XAxis dataKey="name" tick={{ fontSize: 11 }} />
+                                        <YAxis tick={{ fontSize: 11 }} />
+                                        <Tooltip />
+                                        <Area type="monotone" dataKey="revenue" stroke="var(--color-primary)" fill="rgba(99,91,255,0.22)" strokeWidth={3} />
+                                        <Area type="monotone" dataKey="opportunities" stroke="rgba(14,165,233,0.95)" fill="rgba(14,165,233,0.14)" strokeWidth={2} />
+                                    </AreaChart>
+                                </ResponsiveContainer>
                             </div>
                         </div>
 
@@ -1396,27 +1425,6 @@ const Dashboard = ({ user }) => {
                                 </div>
                             </div>
                         )}
-                    </div>
-
-                    <div className="se-panels-grid">
-                        <div className="form-card se-panel">
-                            <div className="page-header se-panel-header">
-                                <h2 className="se-panel-title">Monthly Trends</h2>
-                                <div className="se-panel-subtitle">Opportunities + Revenue</div>
-                            </div>
-                            <div className="se-chart-slot">
-                                <ResponsiveContainer width="100%" height="100%">
-                                    <AreaChart data={Array.isArray(monthlyTrends) ? monthlyTrends : []} margin={{ top: 10, right: 18, left: 0, bottom: 0 }}>
-                                        <CartesianGrid stroke="rgba(15,23,42,0.08)" strokeDasharray="3 3" />
-                                        <XAxis dataKey="name" tick={{ fontSize: 11 }} />
-                                        <YAxis tick={{ fontSize: 11 }} />
-                                        <Tooltip />
-                                        <Area type="monotone" dataKey="revenue" stroke="var(--color-primary)" fill="rgba(99,91,255,0.22)" strokeWidth={3} />
-                                        <Area type="monotone" dataKey="opportunities" stroke="rgba(14,165,233,0.95)" fill="rgba(14,165,233,0.14)" strokeWidth={2} />
-                                    </AreaChart>
-                                </ResponsiveContainer>
-                            </div>
-                        </div>
 
                         <div className="form-card se-panel">
                             <div className="page-header se-panel-header">
@@ -1439,12 +1447,12 @@ const Dashboard = ({ user }) => {
                                 <div className="se-filter-inputs">
                                     {gpFilterType === 'month' && (
                                         <select className="form-control" value={gpMonth} onChange={(e) => { const v = Number(e.target.value); gpFilterRef.current = { ...gpFilterRef.current, month: v }; setGpMonth(v); fetchGPReport({ type: 'month', month: v }); }}>
-                                            {[1,2,3,4,5,6,7,8,9,10,11,12].map((m) => (<option key={m} value={m}>{m}</option>))}
+                                            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((m) => (<option key={m} value={m}>{m}</option>))}
                                         </select>
                                     )}
                                     {gpFilterType === 'quarter' && (
                                         <select className="form-control" value={gpQuarter} onChange={(e) => { const v = e.target.value; gpFilterRef.current = { ...gpFilterRef.current, quarter: v }; setGpQuarter(v); fetchGPReport({ type: 'quarter', quarter: v }); }}>
-                                            {['Q1','Q2','Q3','Q4'].map((q) => (<option key={q} value={q}>{q}</option>))}
+                                            {['Q1', 'Q2', 'Q3', 'Q4'].map((q) => (<option key={q} value={q}>{q}</option>))}
                                         </select>
                                     )}
                                     <input className="form-control" type="number" value={gpYear} onChange={(e) => { const v = Number(e.target.value); gpFilterRef.current = { ...gpFilterRef.current, year: v }; setGpYear(v); fetchGPReport({ year: v }); }} style={{ width: 120 }} />
@@ -1460,7 +1468,7 @@ const Dashboard = ({ user }) => {
                                 </div>
                             )}
 
-                            <div className="table-container" style={{ marginBottom: 0 }}>
+                            <div className="table-container se-scrollable-table" style={{ marginBottom: 0 }}>
                                 <table className="data-table">
                                     <thead>
                                         <tr>
@@ -1475,7 +1483,7 @@ const Dashboard = ({ user }) => {
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {(gpReport?.clientData || []).slice(0, 10).map((c) => (
+                                        {(gpReport?.clientData || []).map((c) => (
                                             <tr key={`${c.sno}-${c.clientName}`}>
                                                 <td>{c.sno}</td>
                                                 <td><strong>{c.clientName}</strong></td>
@@ -1498,167 +1506,170 @@ const Dashboard = ({ user }) => {
                 </div>
             )}
 
-            {showLowGPAlert && (
-                <>
-                    <div className="low-gp-alert-overlay" />
-                    <div className="low-gp-alert-popup">
-                        <div className="low-gp-alert-header">
-                            <h3 className="low-gp-alert-title">⚠️ Low GP Opportunities Detected</h3>
+            {
+                showLowGPAlert && (
+                    <>
+                        <div className="low-gp-alert-overlay" />
+                        <div className="low-gp-alert-popup">
+                            <div className="low-gp-alert-header">
+                                <h3 className="low-gp-alert-title">⚠️ Low GP Opportunities Detected</h3>
+                                <button
+                                    className="low-gp-alert-close"
+                                    onClick={() => setShowLowGPAlert(false)}
+                                >
+                                    ×
+                                </button>
+                            </div>
+                            <div className="low-gp-alert-body">
+                                <p>The following opportunities have a Gross Profit (GP) below the 50% threshold. These require your attention and may need adjustment before approval.</p>
+                            </div>
+                            <ul className="low-gp-alert-list">
+                                {lowGPItems.map((item) => (
+                                    <li key={item._id} className="low-gp-alert-item">
+                                        <strong>{item.opportunityId}</strong> - {item.clientCompanyName}<br />
+                                        GP: <span className="gp-value">
+                                            {item.tov && item.tov > 0
+                                                ? ((item.finalGP || 0) / item.tov * 100).toFixed(2)
+                                                : '0.00'}%
+                                        </span>
+                                    </li>
+                                ))}
+                            </ul>
                             <button
-                                className="low-gp-alert-close"
-                                onClick={() => setShowLowGPAlert(false)}
+                                className="low-gp-alert-acknowledge"
+                                onClick={handleAcknowledgeLowGP}
                             >
-                                ×
+                                I Understand - View Dashboard
                             </button>
                         </div>
-                        <div className="low-gp-alert-body">
-                            <p>The following opportunities have a Gross Profit (GP) below the 50% threshold. These require your attention and may need adjustment before approval.</p>
-                        </div>
-                        <ul className="low-gp-alert-list">
-                            {lowGPItems.map((item) => (
-                                <li key={item._id} className="low-gp-alert-item">
-                                    <strong>{item.opportunityId}</strong> - {item.clientCompanyName}<br />
-                                    GP: <span className="gp-value">
-                                        {item.tov && item.tov > 0
-                                            ? ((item.finalGP || 0) / item.tov * 100).toFixed(2)
-                                            : '0.00'}%
-                                    </span>
-                                </li>
-                            ))}
-                        </ul>
-                        <button
-                            className="low-gp-alert-acknowledge"
-                            onClick={handleAcknowledgeLowGP}
-                        >
-                            I Understand - View Dashboard
-                        </button>
-                    </div>
-                </>
-            )}
+                    </>
+                )
+            }
 
-            <div className="dashboard-grid">
-                <DashboardCard title="Revenue Target" value={`₹${(data?.revenueTarget || 0).toLocaleString()}`} />
-                <DashboardCard title={user.role === 'Sales Manager' ? "Team Pipeline" : "Lead Capture"} count={(user.role === 'Sales Manager' ? data?.totalValue : data?.leadCapture) || 0} />
-                <DashboardCard title="Opportunities" count={(user.role === 'Sales Manager' ? data?.pipeline?.new : data?.opportunities) || 0} />
-                <DashboardCard title="Closures" count={(user.role === 'Sales Manager' ? data?.pipeline?.converted : data?.closures) || 0} />
-            </div>
+
 
             {/* Sales Pipeline Chart & Revenue Growth Chart - Collapsible Section */}
-            {data?.pipeline && (
-                <div className="combined-charts-container">
-                    <div className="combined-charts-header">
-                        <div className="combined-charts-title">Performance Overview</div>
-                        <div className="combined-charts-controls">
-                            <button
-                                className="chart-toggle-btn-global"
-                                onClick={() => setChartsExpanded(!chartsExpanded)}
-                            >
-                                {chartsExpanded ? (
-                                    <>
-                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 15l-6-6-6 6" /></svg>
-                                        Minimize
-                                    </>
-                                ) : (
-                                    <>
-                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M6 9l6 6 6-6" /></svg>
-                                        Maximize
-                                    </>
-                                )}
-                            </button>
-                        </div>
-                    </div>
-
-                    {chartsExpanded && (
-                        <div className="dashboard-charts-grid">
-                            <div className="chart-wrapper">
-                                <SalesPipelineChart
-                                    pipelineData={{
-                                        total: user.role === 'Sales Manager'
-                                            ? ((data?.pipeline?.new || 0) + (data?.pipeline?.qualified || 0) + (data?.pipeline?.sentToDelivery || 0) + (data?.pipeline?.converted || 0) + (data?.pipeline?.lost || 0))
-                                            : (data?.opportunities || 0),
-                                        qualified: data?.pipeline?.qualified || 0,
-                                        sentToDelivery: data?.pipeline?.sentToDelivery || 0,
-                                        converted: user.role === 'Sales Manager' ? data?.pipeline?.converted : (data?.closures || 0)
-                                    }}
-                                />
-                            </div>
-                            <div className="chart-wrapper">
-                                <RevenueGrowthChart />
-                            </div>
-                        </div>
-                    )}
-                </div>
-            )}
-
-            {/* Low GP List */}
-            {showLowGPList && lowGPItems.length > 0 && (
-                <div className="low-gp-list">
-                    <h3>Low GP Opportunities (Needs Attention)</h3>
-                    {lowGPItems.map((item) => (
-                        <div key={item._id} className="low-gp-item">
-                            <div className="low-gp-item-header">
-                                <span className="low-gp-item-id">{item.opportunityId}</span>
-                                <span className="low-gp-item-gp">GP: {item.tov && item.tov > 0 ? ((item.finalGP || 0) / item.tov * 100).toFixed(2) : '0.00'}%</span>
-                            </div>
-                            <div className="low-gp-item-client">{item.clientCompanyName}</div>
-                            <div className="low-gp-item-actions">
+            {
+                data?.pipeline && (
+                    <div className="combined-charts-container">
+                        <div className="combined-charts-header">
+                            <div className="combined-charts-title">Performance Overview</div>
+                            <div className="combined-charts-controls">
                                 <button
-                                    onClick={() => window.location.href = `/opportunities/${item._id}`}
-                                    className="btn-small btn-primary"
+                                    className="chart-toggle-btn-global"
+                                    onClick={() => setChartsExpanded(!chartsExpanded)}
                                 >
-                                    View Details
+                                    {chartsExpanded ? (
+                                        <>
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 15l-6-6-6 6" /></svg>
+                                            Minimize
+                                        </>
+                                    ) : (
+                                        <>
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M6 9l6 6 6-6" /></svg>
+                                            Maximize
+                                        </>
+                                    )}
                                 </button>
                             </div>
                         </div>
-                    ))}
-                </div>
-            )}
 
-            {data?.recentOpportunities && data.recentOpportunities.length > 0 && (
-                <div className="dashboard-section">
-                    <h2 className="section-title">All Recent Opportunities (Real-Time)</h2>
-                    <div className="table-container">
-                        <table className="data-table">
-                            <thead>
-                                <tr>
-                                    <th>Adhoc ID</th>
-                                    <th>Client Company</th>
-                                    <th>Type</th>
-                                    <th>Value</th>
-                                    <th>Status</th>
-                                    <th>Created By</th>
-                                    <th>Created Date</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {data.recentOpportunities.map((opp) => (
-                                    <tr key={opp._id}>
-                                        <td><strong>{opp.opportunityId}</strong></td>
-                                        <td>{opp.clientCompanyName || opp.endClient || 'N/A'}</td>
-                                        <td>{opp.opportunityType || opp.trainingOpportunity || 'N/A'}</td>
-                                        <td>₹{(opp.expectedCommercialValue || opp.tov || 0).toLocaleString()}</td>
-                                        <td><span className={`status-badge ${(opp.opportunityStatus || opp.trainingStatus || 'New').toLowerCase().replace(' ', '-')}`}>
-                                            {opp.opportunityStatus || opp.trainingStatus || 'New'}
-                                        </span></td>
-                                        <td>{opp.salesExecutiveId?.name || opp.salesManagerId?.name || 'N/A'}</td>
-                                        <td>{new Date(opp.createdAt).toLocaleDateString()}</td>
-                                        <td>
-                                            <button
-                                                onClick={() => window.location.href = `/opportunities/${opp._id}`}
-                                                className="btn-small btn-primary"
-                                            >
-                                                View
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                        {chartsExpanded && (
+                            <div className="dashboard-charts-grid">
+                                <div className="chart-wrapper">
+                                    <SalesPipelineChart
+                                        pipelineData={{
+                                            total: user.role === 'Sales Manager'
+                                                ? ((data?.pipeline?.new || 0) + (data?.pipeline?.qualified || 0) + (data?.pipeline?.sentToDelivery || 0) + (data?.pipeline?.converted || 0) + (data?.pipeline?.lost || 0))
+                                                : (data?.opportunities || 0),
+                                            qualified: data?.pipeline?.qualified || 0,
+                                            sentToDelivery: data?.pipeline?.sentToDelivery || 0,
+                                            converted: user.role === 'Sales Manager' ? data?.pipeline?.converted : (data?.closures || 0)
+                                        }}
+                                    />
+                                </div>
+                                <div className="chart-wrapper">
+                                    <RevenueGrowthChart />
+                                </div>
+                            </div>
+                        )}
                     </div>
-                </div>
-            )}
-        </div>
+                )
+            }
+
+            {/* Low GP List */}
+            {
+                showLowGPList && lowGPItems.length > 0 && (
+                    <div className="low-gp-list">
+                        <h3>Low GP Opportunities (Needs Attention)</h3>
+                        {lowGPItems.map((item) => (
+                            <div key={item._id} className="low-gp-item">
+                                <div className="low-gp-item-header">
+                                    <span className="low-gp-item-id">{item.opportunityId}</span>
+                                    <span className="low-gp-item-gp">GP: {item.tov && item.tov > 0 ? ((item.finalGP || 0) / item.tov * 100).toFixed(2) : '0.00'}%</span>
+                                </div>
+                                <div className="low-gp-item-client">{item.clientCompanyName}</div>
+                                <div className="low-gp-item-actions">
+                                    <button
+                                        onClick={() => window.location.href = `/opportunities/${item._id}`}
+                                        className="btn-small btn-primary"
+                                    >
+                                        View Details
+                                    </button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )
+            }
+
+            {
+                data?.recentOpportunities && data.recentOpportunities.length > 0 && (
+                    <div className="dashboard-section">
+                        <h2 className="section-title">All Recent Opportunities (Real-Time)</h2>
+                        <div className="table-container">
+                            <table className="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Adhoc ID</th>
+                                        <th>Client Company</th>
+                                        <th>Type</th>
+                                        <th>Value</th>
+                                        <th>Status</th>
+                                        <th>Created By</th>
+                                        <th>Created Date</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {data.recentOpportunities.map((opp) => (
+                                        <tr key={opp._id}>
+                                            <td><strong>{opp.opportunityId}</strong></td>
+                                            <td>{opp.clientCompanyName || opp.endClient || 'N/A'}</td>
+                                            <td>{opp.opportunityType || opp.trainingOpportunity || 'N/A'}</td>
+                                            <td>₹{(opp.expectedCommercialValue || opp.tov || 0).toLocaleString()}</td>
+                                            <td><span className={`status-badge ${(opp.opportunityStatus || opp.trainingStatus || 'New').toLowerCase().replace(' ', '-')}`}>
+                                                {opp.opportunityStatus || opp.trainingStatus || 'New'}
+                                            </span></td>
+                                            <td>{opp.salesExecutiveId?.name || opp.salesManagerId?.name || 'N/A'}</td>
+                                            <td>{new Date(opp.createdAt).toLocaleDateString()}</td>
+                                            <td>
+                                                <button
+                                                    onClick={() => window.location.href = `/opportunities/${opp._id}`}
+                                                    className="btn-small btn-primary"
+                                                >
+                                                    View
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                )
+            }
+        </div >
     );
 };
 
